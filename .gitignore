@@ -1,0 +1,26 @@
+# Terraform files
+*.tfstate
+*.tfstate.backup
+.terraform/
+
+# Terraform plan output
+plan_output
+plan_outputsecgroup
+
+# Local .terraform directories
+**/.terraform/*
+
+# .tfvars files
+*.tfvars
+
+# Crash log files
+crash.log
+crash.*.log
+
+# Exclude all .tfvars files, which are likely to contain sensitive data
+*.tfvars
+*.tfvars.json
+
+# Ignore CLI configuration files
+.terraformrc
+terraform.rc
