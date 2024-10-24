@@ -192,21 +192,6 @@ resource "aws_iam_role_policy_attachment" "eks_node_role_ecr_policy" {
 }
 
 
-#resource "aws_iam_role_policy_attachment" "my_node_role_policy_attachment" {
-#  role       = aws_iam_role.my_node_role.name
-#  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
-#}
-#resource "aws_iam_role_policy_attachment" "my_node_role_cni_policy_attachment" {
- # role       = aws_iam_role.my_node_role.name
- # policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
-#}
-
-#resource "aws_iam_role_policy_attachment" "eks_node_role_ecr_policy" {
- # role       = aws_iam_role.my_node_role.name
- # policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-#}
-
-
 # Output the EKS cluster name
 output "eks_cluster_name" {
     value = aws_eks_cluster.my_eks_cluster.name
