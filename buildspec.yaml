@@ -1,0 +1,16 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      docker: 18
+  pre_build:
+    commands:
+      - $(aws ecr get-login --no-include-email --region eu-north-1)
+  build:
+    commands:
+      - docker build -t $(AWS_ACCOUNT_ID).dkr.ecr.eu-north-1.amazonaws.com/mynoderepo:latest .
+      - docker push $(AWS_ACCOUNT_ID).dkr.ecr.eu-north-1.amazonaws.com/mynoderepo:latest
+      post_build:
+    commands:
+      - kubectl apply -f deployment.yaml
