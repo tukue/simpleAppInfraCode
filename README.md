@@ -1,1 +1,6 @@
-creating AWS EKS using terraform to run app in containerized approch.
+creating AWS EKSusing terraform to run nodes app in containerized approch.
+
+tools config :
+- AWS CLI: configured with approriate permission
+- Terraform 
+- kubectl 
