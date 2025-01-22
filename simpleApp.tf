@@ -78,8 +78,3 @@ resource "aws_security_group" "my_security_group" {
     }
 }
 
-
-# Output the VPC ID
-output "vpc_id" {
-    value = aws_vpc.my_vpc.id
-}
