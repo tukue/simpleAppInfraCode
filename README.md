@@ -17,6 +17,31 @@ The infrastructure setup involves:
 + Configuring Amazon EKS to orchestrate containerized applications.
 + Managing resources and configurations via Terraform for automation and consistency.
 
+## Infrastructure Diagram
+
+```markdown
+graph TD
+    subgraph AWS
+        VPC["VPC"]
+        IGW["Internet Gateway"]
+        RT["Route Table"]
+        Subnet1["Public Subnet 1"]
+        Subnet2["Public Subnet 2"]
+        SG["Security Group"]
+        EKS["EKS Cluster"]
+        NodeGroup["Node Group"]
+    end
+
+    VPC --> IGW
+    VPC --> RT
+    RT --> Subnet1
+    RT --> Subnet2
+    Subnet1 --> EKS
+    Subnet2 --> EKS
+    EKS --> SG
+    EKS --> NodeGroup
+```
+
 ## Prerequisites
 
 Ensure the following tools are installed and properly configured:
