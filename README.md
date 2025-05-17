@@ -69,11 +69,5 @@ kubectl apply -f kubernets/    # Ensure the path is correct
 + `outputs.tf`: Defines outputs to be displayed after terraform apply.
 + `buildspec.yaml`: Specifies build instructions, including placeholders for AWS account numbers.
 
-## Cleanup
 
-To delete all resources created by Terraform:
-
-```bash
-terraform destroy
-```
 
