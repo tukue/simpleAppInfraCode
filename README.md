@@ -17,31 +17,6 @@ The infrastructure setup involves:
 + Configuring Amazon EKS to orchestrate containerized applications.
 + Managing resources and configurations via Terraform for automation and consistency.
 
-## Infrastructure Diagram
-
-```markdown
-graph TD
-    subgraph AWS
-        VPC["VPC"]
-        IGW["Internet Gateway"]
-        RT["Route Table"]
-        Subnet1["Public Subnet 1"]
-        Subnet2["Public Subnet 2"]
-        SG["Security Group"]
-        EKS["EKS Cluster"]
-        NodeGroup["Node Group"]
-    end
-
-    VPC --> IGW
-    VPC --> RT
-    RT --> Subnet1
-    RT --> Subnet2
-    Subnet1 --> EKS
-    Subnet2 --> EKS
-    EKS --> SG
-    EKS --> NodeGroup
-```
-
 ## Prerequisites
 
 Ensure the following tools are installed and properly configured:
@@ -50,7 +25,7 @@ Ensure the following tools are installed and properly configured:
 + **Terraform**: To define and manage the infrastructure resources.
 + **kubectl**: For interacting with the EKS cluster.
 
-## Setup Instructions
+## Setup Instructions   
 
 1. Clone the repository:
 
@@ -93,6 +68,31 @@ kubectl apply -f kubernets/    # Ensure the path is correct
 + `variables.tf`: Contains configurable variables for easy customization.
 + `outputs.tf`: Defines outputs to be displayed after terraform apply.
 + `buildspec.yaml`: Specifies build instructions, including placeholders for AWS account numbers.
+
+## Infrastructure Diagram
+
+```markdown
+graph TD
+    subgraph AWS
+        VPC["VPC"]
+        IGW["Internet Gateway"]   
+        RT["Route Table"]
+        Subnet1["Public Subnet 1"]
+        Subnet2["Public Subnet 2"]
+        SG["Security Group"]
+        EKS["EKS Cluster"]
+        NodeGroup["Node Group"]
+    end
+
+    VPC --> IGW
+    VPC --> RT
+    RT --> Subnet1
+    RT --> Subnet2
+    Subnet1 --> EKS
+    Subnet2 --> EKS
+    EKS --> SG
+    EKS --> NodeGroup
+```
 
 
 
