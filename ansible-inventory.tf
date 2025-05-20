@@ -14,7 +14,7 @@ ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/
   filename = "${path.module}/inventory"
 }
 
-resource "null_resource" "run_ansible" {
+resource "null_resource" "ansible_playbook_runner" {
   count = var.enable_ansible ? 1 : 0
   
   depends_on = [local_file.ansible_inventory, module.eks]
