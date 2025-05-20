@@ -57,3 +57,9 @@ variable "max_size" {
   description = "Maximum number of worker nodes"
   type        = number
 }
+
+variable "enable_ansible" {
+  description = "Flag to enable or disable Ansible configuration"
+  type        = bool
+  default     = false
+}
