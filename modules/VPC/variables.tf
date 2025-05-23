@@ -13,3 +13,15 @@ variable "subnet_2_cidr" {
   description = "CIDR block for Subnet 2 in eu-north-1b"
   type        = string
 }
+
+variable "environment" {
+  description = "Environment name (dev, staging, prod)"
+  type        = string
+  default     = "dev"
+}
+
+variable "cluster_name" {
+  description = "Name of the EKS cluster"
+  type        = string
+  default     = "my-eks-cluster"
+}

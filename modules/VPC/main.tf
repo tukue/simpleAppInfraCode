@@ -1,67 +1,68 @@
-# modules/vpc/main.tf
-
-resource "aws_vpc" "this" {
-  cidr_block = var.vpc_cidr
-
+resource "aws_vpc" "main" {
+  cidr_block           = var.vpc_cidr
   enable_dns_hostnames = true
   enable_dns_support   = true
 
   tags = {
-    Name = "eks-vpc"
+    Name = "${var.environment}-vpc"
   }
 }
 
-resource "aws_internet_gateway" "this" {
-  vpc_id = aws_vpc.this.id
+resource "aws_internet_gateway" "main" {
+  vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "eks-igw"
+    Name = "${var.environment}-igw"
   }
 }
 
 resource "aws_subnet" "subnet_1" {
-  vpc_id                  = aws_vpc.this.id
+  vpc_id                  = aws_vpc.main.id
   cidr_block              = var.subnet_1_cidr
   availability_zone       = "eu-north-1c"
-  map_public_ip_on_launch = true  # Enable auto-assign public IP
+  map_public_ip_on_launch = true
 
   tags = {
-    Name = "Subnet 1 (eu-north-1c)"
+    Name = "${var.environment}-subnet-1"
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+    "kubernetes.io/role/elb" = "1"
   }
 }
 
 resource "aws_subnet" "subnet_2" {
-  vpc_id                  = aws_vpc.this.id
+  vpc_id                  = aws_vpc.main.id
   cidr_block              = var.subnet_2_cidr
   availability_zone       = "eu-north-1b"
-  map_public_ip_on_launch = true  # Enable auto-assign public IP
+  map_public_ip_on_launch = true
 
   tags = {
-    Name = "Subnet 2 (eu-north-1b)"
+    Name = "${var.environment}-subnet-2"
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+    "kubernetes.io/role/elb" = "1"
   }
 }
 
-# Create a route table
-resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.this.id
+resource "aws_route_table" "main" {
+  vpc_id = aws_vpc.main.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.this.id
+    gateway_id = aws_internet_gateway.main.id
   }
 
   tags = {
-    Name = "Public Route Table"
+    Name = "${var.environment}-route-table"
   }
 }
 
-# Associate the subnets with the route table
 resource "aws_route_table_association" "subnet_1" {
   subnet_id      = aws_subnet.subnet_1.id
-  route_table_id = aws_route_table.public.id
+  route_table_id = aws_route_table.main.id
 }
 
 resource "aws_route_table_association" "subnet_2" {
   subnet_id      = aws_subnet.subnet_2.id
-  route_table_id = aws_route_table.public.id
+  route_table_id = aws_route_table.main.id
 }
+
+
