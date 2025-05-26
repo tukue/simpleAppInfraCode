@@ -7,7 +7,8 @@ This repository contains Terraform code for setting up a basic infrastructure on
 - [Prerequisites](#prerequisites)
 - [Setup Instructions](#setup-instructions)
 - [Configuration Files](#configuration-files)
-- [Ansible Integration](#ansible-integration)
+- [Infrastructure Diagram](#infrastructure-diagram)
+- [Improvements with Terragrunt and ArgoCD](#improvements-with-terragrunt-and-argocd)
 - [Cleanup](#cleanup)
 
 ## Overview
@@ -17,7 +18,6 @@ The infrastructure setup involves:
 + Provisioning a Virtual Private Cloud (VPC) and security groups on AWS.
 + Configuring Amazon EKS to orchestrate containerized applications.
 + Managing resources and configurations via Terraform for automation and consistency.
-+ Optional Ansible configuration for EKS worker nodes.
 
 ## Prerequisites
 
@@ -25,8 +25,8 @@ Ensure the following tools are installed and properly configured:
 
 + **AWS CLI**: Configure it with the necessary permissions to access AWS resources.
 + **Terraform**: To define and manage the infrastructure resources.
++ **Terragrunt**: For managing Terraform configurations across environments.
 + **kubectl**: For interacting with the EKS cluster.
-+ **Ansible**: For automated configuration management (optional).
 
 ## Setup Instructions   
 
@@ -43,21 +43,17 @@ cd simpleAppInfraCode
 aws configure
 ```
 
-3. Initialize Terraform:
+3. Initialize and apply Terragrunt:
 
 ```bash
-terraform init
-```
-
-4. Set up the infrastructure: Apply the Terraform configurations to create the required AWS resources:
-
-```bash
-terraform apply
+terragrunt init
+terragrunt plan
+terragrunt apply
 ```
 
 Note: Review the output for any important details, including the URL to access your EKS cluster and other relevant resource identifiers, and enter "yes" to confirm.
 
-5. Deploy to EKS: Use kubectl to apply your Kubernetes configurations for deploying the app. Ensure the correct directory for your YAML files:
+4. Deploy to EKS: Use kubectl to apply your Kubernetes configurations for deploying the app. Ensure the correct directory for your YAML files:
 
 ```bash
 kubectl apply -f kubernets/    # Ensure the path is correct
@@ -68,35 +64,8 @@ kubectl apply -f kubernets/    # Ensure the path is correct
 + `main.tf`: Core Terraform script to set up the AWS environment.
 + `variables.tf`: Contains configurable variables for easy customization.
 + `outputs.tf`: Defines outputs to be displayed after terraform apply.
++ `terragrunt.hcl`: Manages Terraform configurations and remote state.
 + `buildspec.yaml`: Specifies build instructions, including placeholders for AWS account numbers.
-+ `ansible-playbook.yml`: Main Ansible playbook for configuring EKS nodes.
-+ `ansible-inventory.tf`: Terraform file to generate Ansible inventory and run the playbook.
-
-## Ansible Integration
-
-This project includes optional Ansible integration for automated configuration of EKS worker nodes. 
-
-### Enabling/Disabling Ansible
-
-To enable or disable Ansible configuration, set the `enable_ansible` variable in your `terraform.tfvars` file:
-
-```hcl
-enable_ansible = true  # Set to false to disable Ansible
-```
-
-You can also override this setting during apply:
-
-```bash
-terraform apply -var="enable_ansible=true"
-```
-
-### Configuration Details
-
-When enabled, Ansible will:
-- Update all packages on the worker nodes
-- Install required packages (Docker, Git, Python, etc.)
-- Configure Docker and Kubernetes components
-- Set up proper node labels and configurations
 
 ## Infrastructure Diagram
 
@@ -123,7 +92,30 @@ graph TD
     EKS --> NodeGroup
 ```
 
-## Improvements with ArgoCD and Terragrunt
+## Improvements with Terragrunt and ArgoCD
+
+### Terragrunt
+Terragrunt is used to manage Terraform configurations across environments. It provides the following benefits:
+
+- **DRY (Don't Repeat Yourself) configurations**: Reuse common Terraform code across environments.
+- **Remote state management**: Automatically configure and manage remote state.
+- **Dependency management**: Handle dependencies between Terraform modules.
+
+The Terragrunt configuration is defined in `terragrunt.hcl` and includes:
+- Input variables for the infrastructure
+- Remote state configuration for S3 backend
+- Module dependencies
+
+### Modular Architecture
+The infrastructure is organized into reusable modules:
+
+- **VPC Module**: Creates the networking infrastructure including VPC, subnets, and routing.
+- **EKS Module**: Sets up the Kubernetes cluster and node groups.
+
+This modular approach allows for:
+- Better code organization
+- Reusability across environments
+- Easier maintenance and updates
 
 ### ArgoCD
 ArgoCD is used to automate the deployment of Kubernetes manifests. The ArgoCD application is defined in `kubernets/argocd-application.yaml`.
@@ -135,10 +127,10 @@ kubectl apply -f kubernets/argocd-application.yaml
 
 ## Cleanup
 
-To avoid incurring unnecessary costs, remember to destroy the resources when they are no longer needed:
+To destroy the infrastructure and avoid incurring charges:
 
 ```bash
-terraform destroy
+terragrunt destroy
 ```
 
-Confirm by typing "yes" when prompted.
+Review the output and enter "yes" to confirm the destruction of resources.
