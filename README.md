@@ -134,3 +134,64 @@ terragrunt destroy
 ```
 
 Review the output and enter "yes" to confirm the destruction of resources.
+
+## Helm Deployment
+
+### Prerequisites
+
+- **Helm v3.x** installed. Follow the [Helm installation guide](https://helm.sh/docs/intro/install/).
+- Access to a **Kubernetes cluster** configured (e.g., via `kubectl`).
+- Helm chart repository or local Helm chart available.
+
+### Installing the Chart
+
+1. **Package the Helm Chart**:
+   If you are working with a local Helm chart, package it:
+   ```bash
+helm package app
+helm install app ./app 
+
+verify  deployment
+helm status app
+
+Customizing the Deployment
+helm install app ./app -f custom-values.yaml 
+
+kubectl get all 
+
+
+Accessing the Application
+kubectl get service app 
+
+If your Helm chart uses an Ingress, ensure the ingress controller is configured and retrieve the hostname:
+kubectl get ingress app 
+## Helm Deployment
+
+### Prerequisites
+
+- **Helm v3.x** installed. Follow the [Helm installation guide](https://helm.sh/docs/intro/install/).
+- Access to a **Kubernetes cluster** configured (e.g., via `kubectl`).
+- Helm chart repository or local Helm chart available.
+
+### Installing the Chart
+
+1. **Package the Helm Chart**:
+   If you are working with a local Helm chart, package it:
+   ```bash
+helm package app
+helm install app ./app 
+
+verify  deployment
+helm status app
+
+Customizing the Deployment
+helm install app ./app -f custom-values.yaml 
+
+kubectl get all 
+
+
+Accessing the Application
+kubectl get service app 
+
+If your Helm chart uses an Ingress, ensure the ingress controller is configured and retrieve the hostname:
+kubectl get ingress app
