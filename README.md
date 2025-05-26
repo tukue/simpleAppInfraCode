@@ -187,6 +187,7 @@ helm status app
 Customizing the Deployment
 helm install app ./app -f custom-values.yaml 
 
+List all Kubernetes resources created by Helm:
 kubectl get all 
 
 
