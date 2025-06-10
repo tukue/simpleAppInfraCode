@@ -4,7 +4,6 @@ provider "aws" {
 }
 
 # Create a VPC
-
 resource "aws_vpc" "my_vpc" {
     cidr_block = "10.0.0.0/16"  
 
@@ -67,18 +66,18 @@ resource "aws_route_table_association" "my_route_table_association" {
 # Create an IAM role for EKS
 resource "aws_iam_role" "my_eks_role" {
     name = "my-eks-role"
-assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = "eks.amazonaws.com"
-        }
-        Action = "sts:AssumeRole"
-      }
-    ]
-  })
+    assume_role_policy = jsonencode({
+        Version = "2012-10-17"
+        Statement = [
+          {
+            Effect = "Allow"
+            Principal = {
+              Service = "eks.amazonaws.com"
+            }
+            Action = "sts:AssumeRole"
+          }
+        ]
+      })
 }
 
 # Attach the required policies to the IAM role
@@ -100,10 +99,19 @@ resource "aws_security_group" "my_security_group" {
     vpc_id = aws_vpc.my_vpc.id
 
     ingress {
-        from_port   = 0
-        to_port     = 65535
+        description = "HTTPS access from VPC"
+        from_port   = 443
+        to_port     = 443
         protocol    = "tcp"
-        cidr_blocks = ["0.0.0.0/0"]
+        cidr_blocks = [aws_vpc.my_vpc.cidr_block]
+    }
+
+    ingress {
+        description = "NodePort Services"
+        from_port   = 30000
+        to_port     = 32767
+        protocol    = "tcp"
+        cidr_blocks = [aws_vpc.my_vpc.cidr_block]
     }
 
     egress {
@@ -118,7 +126,6 @@ resource "aws_security_group" "my_security_group" {
     }
 }
 
-
 # Create a security group for worker nodes
 resource "aws_security_group" "worker_node_security_group" {
     name        = "worker-node-security-group"
@@ -127,10 +134,22 @@ resource "aws_security_group" "worker_node_security_group" {
     vpc_id = aws_vpc.my_vpc.id
 
     ingress {
+        description     = "Allow communication with control plane"
+        from_port      = 0
+        to_port        = 65535
+        protocol       = "tcp"
+        security_groups = [aws_security_group.my_security_group.id]
+    }
+
+    egress {
         from_port   = 0
-        to_port     = 65535
-        protocol    = "tcp"
-        security_groups = [aws_security_group.my_security_group.id] # Reference the security group created for the EKS cluster
+        to_port     = 0
+        protocol    = "-1"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+
+    tags = {
+        Name = "worker-node-security-group"
     }
 }
 
@@ -152,14 +171,13 @@ resource "aws_eks_node_group" "my_node_group" {
     node_role_arn   = aws_iam_role.my_node_role.arn
     subnet_ids      = [aws_subnet.my_subnet.id, aws_subnet.my_subnet_2.id]
    
-    
     scaling_config {
         desired_size = 3
         min_size     = 1
         max_size     = 5
     }
-  
 }
+
 resource "aws_iam_role" "my_node_role" {
   name = "my_node_role"
 
@@ -181,6 +199,7 @@ resource "aws_iam_role_policy_attachment" "my_node_role_policy_attachment" {
   role       = aws_iam_role.my_node_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
 }
+
 resource "aws_iam_role_policy_attachment" "my_node_role_cni_policy_attachment" {
   role       = aws_iam_role.my_node_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
@@ -191,12 +210,10 @@ resource "aws_iam_role_policy_attachment" "eks_node_role_ecr_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
 
-
 # Output the EKS cluster name
 output "eks_cluster_name" {
     value = aws_eks_cluster.my_eks_cluster.name
 }
-
 
 # Output the VPC ID
 output "vpc_id" {
