@@ -1,0 +1,103 @@
+name: Terraform Security Scan
+
+on:
+  push:
+    paths:
+      - '**.tf'
+      - '.github/workflows/terraform-scan.yml'
+  pull_request:
+    paths:
+      - '**.tf'
+      - '.github/workflows/terraform-scan.yml'
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  security-scan:
+    name: Terraform Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.6.0"
+
+      - name: Install Terrascan
+        run: |
+          TERRASCAN_VERSION=$(curl -s https://api.github.com/repos/tenable/terrascan/releases/latest | jq -r '.tag_name')
+          TERRASCAN_VERSION=${TERRASCAN_VERSION#v}
+          wget https://github.com/tenable/terrascan/releases/download/v${TERRASCAN_VERSION}/terrascan_${TERRASCAN_VERSION}_Linux_x86_64.tar.gz -O terrascan.tar.gz
+          tar -xf terrascan.tar.gz terrascan
+          rm terrascan.tar.gz
+          sudo install terrascan /usr/local/bin
+          rm terrascan
+
+      - name: Initialize Terraform
+        run: terraform init -backend=false
+
+      - name: Run Terrascan
+        id: terrascan
+        run: |
+          # Create scan config file
+          cat > config.toml << EOF
+          [rules]
+          skip-rules = []
+          
+          [severity]
+          level = "HIGH"
+          
+          [notifications]
+          webhook = false
+          EOF
+          
+          # Run scan with config
+          terrascan scan \
+            --config config.toml \
+            -t aws \
+            -i terraform \
+            --non-recursive \
+            -d . \
+            -o json | tee terrascan-results.json
+          
+          # Generate human readable output
+          terrascan scan \
+            --config config.toml \
+            -t aws \
+            -i terraform \
+            --non-recursive \
+            -d . \
+            -o human | tee terrascan-human.txt
+        continue-on-error: true
+
+      - name: Parse Results
+        id: parse
+        run: |
+          HIGH_COUNT=$(jq -r '.results.violations | map(select(.severity == "HIGH")) | length' terrascan-results.json || echo "0")
+          MEDIUM_COUNT=$(jq -r '.results.violations | map(select(.severity == "MEDIUM")) | length' terrascan-results.json || echo "0")
+          echo "high_severity_count=${HIGH_COUNT}" >> $GITHUB_ENV
+          echo "medium_severity_count=${MEDIUM_COUNT}" >> $GITHUB_ENV
+          
+          echo "Summary of findings:"
+          echo "High severity issues: ${HIGH_COUNT}"
+          echo "Medium severity issues: ${MEDIUM_COUNT}"
+
+      - name: Upload Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: terrascan-results
+          path: |
+            terrascan-results.json
+            terrascan-human.txt
+
+      - name: Check Results
+        run: |
+          if [ "${{ env.high_severity_count }}" -gt 0 ]; then
+            echo "::error::Found ${{ env.high_severity_count }} high severity issues!"
+            exit 1
+          fi
+          if [ "${{ env.medium_severity_count }}" -gt 5 ]; then
+            echo "::warning::Found more than 5 medium severity issues"
+          fi
