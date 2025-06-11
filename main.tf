@@ -1,19 +1,25 @@
 module "vpc" {
-  source = "./modules/vpc"
+  source = "./modules/VPC" // Changed from vpc to VPC to match actual directory name
 
-  vpc_cidr     = "10.0.0.0/16"
-  subnet_1_cidr = "10.0.1.0/24"
-  subnet_2_cidr = "10.0.2.0/24"
+  vpc_cidr     = var.vpc_cidr
+  subnet_1_cidr = var.subnet_1_cidr
+  subnet_2_cidr = var.subnet_2_cidr
+  environment = "dev"
+  cluster_name = var.cluster_name
 }
 
 module "eks" {
   source = "./modules/eks"
 
   vpc_id     = module.vpc.vpc_id
-  subnet_ids = [module.vpc.subnet_1_id, module.vpc.subnet_2_id]
-
-  cluster_name    = "my-eks-cluster"
-  node_group_name = "my-node-group"
+  subnet_ids = module.vpc.subnet_ids
+  cluster_name = var.cluster_name
+  node_group_name = var.node_group_name
+  eks_role_name = var.eks_role_name
+  node_role_name = var.node_role_name
+  desired_size = var.desired_size
+  min_size = var.min_size
+  max_size = var.max_size
 }
 
 
