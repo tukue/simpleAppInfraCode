@@ -1,6 +1,12 @@
+    variable "aws_region" {
+        type    = string
+        default = "eu-north-1"  
+    }
+
 # Define the provider
 provider "aws" {
-    region = "eu-north-1"  
+
+ region = var.aws_region
 }
 
 # Create a VPC
