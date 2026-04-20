@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: simple-app-stage
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/tukue/simpleAppInfraCode.git
+    targetRevision: HEAD
+    path: standardized-path/app
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-stage.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: stage
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

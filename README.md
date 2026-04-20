@@ -1,173 +1,81 @@
-# simpleAppInfraCode
+# EKS Internal Developer Platform (IDP) Reference
 
-This repository contains Terraform code for setting up a basic infrastructure on AWS using Amazon Elastic Kubernetes Service (EKS) to run a Node.js application in a containerized environment.
+This repository demonstrates a modern Platform Engineering approach to managing containerized applications on Amazon EKS. It focuses on a **"Platform-as-Product"** model, providing a standardized, declarative path for application delivery.
 
-## Table of Contents
-- [Overview](#overview)
-- [Prerequisites](#prerequisites)
-- [Setup Instructions](#setup-instructions)
-- [Configuration Files](#configuration-files)
-- [Infrastructure Diagram](#infrastructure-diagram)
-- [Improvements with Terragrunt and ArgoCD](#improvements-with-terragrunt-and-argocd)
-- [Cleanup](#cleanup)
+## Platform Architecture
 
-## Overview
+The platform is structured into clear layers to separate infrastructure concerns from application delivery:
 
-The infrastructure setup involves:
-
-+ Provisioning a Virtual Private Cloud (VPC) and security groups on AWS.
-+ Configuring Amazon EKS to orchestrate containerized applications.
-+ Managing resources and configurations via Terraform for automation and consistency.
-
-## Prerequisites
-
-Ensure the following tools are installed and properly configured:
-
-+ **AWS CLI**: Configure it with the necessary permissions to access AWS resources.
-+ **Terraform**: To define and manage the infrastructure resources.
-+ **Terragrunt**: For managing Terraform configurations across environments.
-+ **kubectl**: For interacting with the EKS cluster.
-
-## Setup Instructions   
-
-1. Clone the repository:
-
-```bash
-git clone https://github.com/tukue/simpleAppInfraCode.git
-cd simpleAppInfraCode
+```text
+.
+├── infra/                # Cloud Infrastructure (VPC, EKS, IAM) - Terraform/Terragrunt
+├── platform/             # Platform Layer
+│   ├── bootstrap/        # Initial Cluster Bootstrap (Argo CD)
+│   ├── addons/           # Shared Cluster Add-ons (Ingress, Observability)
+│   └── apps/             # Tenant Application Definitions (GitOps)
+├── standardized-path/    # The "Golden Path"
+│   └── app/              # Reusable Helm chart for all tenant workloads
+└── docs/                 # Documentation and ADRs
 ```
 
-2. Configure AWS CLI: Make sure AWS CLI is configured with the correct credentials:
+## The "Golden Path" Workflow
 
-```bash
-aws configure
-```
+The platform provides a standardized workflow for both Platform Engineers and Application Developers:
 
-3. Initialize and apply Terragrunt:
+1.  **Infrastructure Provisioning:** Platform engineers use Terraform (managed via Terragrunt) in `infra/` to provision the AWS foundation.
+2.  **Platform Bootstrap:** Argo CD is installed and points to the `platform/` directory as the source of truth for the cluster state.
+3.  **Application Onboarding:** Developers use the **standardized Helm chart** in `standardized-path/app/`.
+4.  **Environment Promotion:** Application state is managed via environment-specific values in `platform/apps/{dev,stage,prod}/`.
 
-```bash
-terragrunt init
-terragrunt plan
-terragrunt apply
-```
+## Key Components
 
-Note: Review the output for any important details, including the URL to access your EKS cluster and other relevant resource identifiers, and enter "yes" to confirm.
+### 1. Infrastructure Layer (`infra/`)
+- **Tooling:** Terraform & Terragrunt
+- **Resources:** VPC, Subnets, EKS Cluster, Managed Node Groups, IAM Roles (IRSA).
+- **State Management:** S3 Backend configured in `terragrunt.hcl`.
 
-4. Deploy to EKS: Use kubectl to apply your Kubernetes configurations for deploying the app. Ensure the correct directory for your YAML files:
+### 2. GitOps Layer (`platform/`)
+- **Controller:** Argo CD
+- **Model:** Declarative reconciliation of the entire cluster state from Git.
+- **Organization:**
+    - `platform/apps/dev/app.yaml`: The Argo CD Application manifest for the development environment.
+    - `platform/apps/dev/values.yaml`: Environment-specific overrides (replicas, env vars).
 
-```bash
-kubectl apply -f kubernets/    # Ensure the path is correct
-```
+### 3. Application Contract (`standardized-path/app/`)
+- **Tooling:** Helm
+- **Standardized Inputs:**
+    - Container Image & Tag (Immutable versions preferred)
+    - Resource Limits/Requests (Guaranteed QoS)
+    - Security Context (Non-root execution)
+    - Ingress Configuration
+    - Environment Variables
 
-## Configuration Files
-
-+ `main.tf`: Core Terraform script to set up the AWS environment.
-+ `variables.tf`: Contains configurable variables for easy customization.
-+ `outputs.tf`: Defines outputs to be displayed after terraform apply.
-+ `terragrunt.hcl`: Manages Terraform configurations and remote state.
-+ `buildspec.yaml`: Specifies build instructions, including placeholders for AWS account numbers.
-
-## Infrastructure Diagram
-
-```markdown
-graph TD
-    subgraph AWS
-        VPC["VPC"]
-        IGW["Internet Gateway"]   
-        RT["Route Table"]
-        Subnet1["Public Subnet 1"]
-        Subnet2["Public Subnet 2"]
-        SG["Security Group"]
-        EKS["EKS Cluster"]
-        NodeGroup["Node Group"]
-    end
-
-    VPC --> IGW
-    VPC --> RT
-    RT --> Subnet1
-    RT --> Subnet2
-    Subnet1 --> EKS
-    Subnet2 --> EKS
-    EKS --> SG
-    EKS --> NodeGroup
-```
-
-## Improvements with Terragrunt and ArgoCD
-
-### Terragrunt
-Terragrunt is used to manage Terraform configurations across environments. It provides the following benefits:
-
-- **DRY (Don't Repeat Yourself) configurations**: Reuse common Terraform code across environments.
-- **Remote state management**: Automatically configure and manage remote state.
-- **Dependency management**: Handle dependencies between Terraform modules.
-
-The Terragrunt configuration is defined in `terragrunt.hcl` and includes:
-- Input variables for the infrastructure
-- Remote state configuration for S3 backend
-- Module dependencies
-
-### Modular Architecture
-The infrastructure is organized into reusable modules:
-
-- **VPC Module**: Creates the networking infrastructure including VPC, subnets, and routing.
-- **EKS Module**: Sets up the Kubernetes cluster and node groups.
-
-This modular approach allows for:
-- Better code organization
-- Reusability across environments
-- Easier maintenance and updates
-
-### ArgoCD
-ArgoCD is used to automate the deployment of Kubernetes manifests. The ArgoCD application is defined in `kubernets/argocd-application.yaml`.
-
-To apply the ArgoCD application:
-```bash
-kubectl apply -f kubernets/argocd-application.yaml
-```
-
-## Cleanup
-
-To destroy the infrastructure and avoid incurring charges:
-
-```bash
-terragrunt destroy
-```
-
-Review the output and enter "yes" to confirm the destruction of resources.
-
-## Helm Deployment
+## Getting Started
 
 ### Prerequisites
+- AWS CLI & Credentials
+- Terraform & Terragrunt
+- kubectl & Helm
 
-- **Helm v3.x** installed. Follow the [Helm installation guide](https://helm.sh/docs/intro/install/).
-- Access to a **Kubernetes cluster** configured (e.g., via `kubectl`).
-- Helm chart repository or local Helm chart available.
+### Provision Infrastructure
+```bash
+cd infra
+terragrunt run-all plan
+terragrunt run-all apply
+```
 
-### Installing the Chart
-
-1. Package the Helm chart:
-
+### Deploy Application (via GitOps)
+1. Ensure Argo CD is installed in your cluster.
+2. Apply the bootstrap manifest:
    ```bash
-   helm package my-app
-   helm install app ./my-app
+   kubectl apply -f platform/apps/dev/app.yaml
    ```
+3. Argo CD will automatically reconcile the `app` Helm chart using the `dev` environment values.
 
-2. Verify the deployment:
+## Design Principles
+- **Declarative over Imperative:** No manual `kubectl` or `ansible` node mutations in the main flow.
+- **Tenant Isolation:** Standardized charts enforce security and resource boundaries.
+- **Git as Source of Truth:** Every cluster change is a Git commit.
 
-   ```bash
-   helm status app
-   kubectl get all
-   ```
-
-3. Customize the deployment if needed:
-
-   ```bash
-   helm install app ./my-app -f custom-values.yaml
-   ```
-
-4. Access the application:
-
-   ```bash
-   kubectl get service app
-   kubectl get ingress app
-   ```
+---
+*For historical or experimental assets (Ansible, raw manifests), see the `legacy/` directory.*

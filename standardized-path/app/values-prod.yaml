@@ -1,0 +1,4 @@
+# Prod overrides
+replicaCount: 3
+image:
+  tag: "1.0.0"

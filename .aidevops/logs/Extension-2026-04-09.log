@@ -1,0 +1,29 @@
+[2026-04-09 21:55:17.991] AIDevOps extension v2026.327.1727 activated
+[2026-04-09 21:55:17.996] Discovered 0 AIDevOps server(s): (none)
+[2026-04-09 21:55:17.996] Server instructions loaded for 0 server(s)
+[2026-04-09 21:55:17.996] NuGet sources: msazure.pkgs.visualstudio.com/One/_packaging/AIDevOps/nuget/v3/index.json
+[2026-04-09 21:55:17.996] Feed watcher started (30 min interval, 1 source(s))
+[2026-04-09 21:55:17.998] Graph orchestration engine initialized (lazy — graphs compiled on first use)
+[2026-04-09 21:55:51.341] ensureToolDependencies: starting — resolver=yes, 3 total dependencies, 1 deferred
+[2026-04-09 21:55:51.352] checkToolDependencies: 87 tools available, resolver=yes, checking 3 dependencies
+[2026-04-09 21:55:51.352] isToolAvailable: renderMermaidDiagram — exact match: true
+[2026-04-09 21:55:51.352] Tool dependency OK: renderMermaidDiagram
+[2026-04-09 21:55:51.352] isToolAvailable: vscode_askQuestions — exact match: true
+[2026-04-09 21:55:51.352] Tool dependency OK: vscode_askQuestions
+[2026-04-09 21:55:51.353] isToolAvailable: mcp_aidevops-graph → expectedServer="aidevops-graph", truncatedPrefix=(none)
+[2026-04-09 21:55:51.353] isToolAvailable: mcp_aidevops-graph — fallback fullName match: false
+[2026-04-09 21:55:51.353] Tool dependency DEFERRED: mcp_aidevops-graph — will watch in background
+[2026-04-09 21:55:51.353] checkToolDependencies: 2/2 immediate dependencies satisfied
+[2026-04-09 21:55:51.354] All immediate tool dependencies satisfied
+[2026-04-09 21:55:51.355] ensureToolDependencies: watching 1 deferred tool(s): mcp_aidevops-graph
+[2026-04-09 21:56:25.611] isToolAvailable: mcp_aidevops-graph → expectedServer="aidevops-graph", truncatedPrefix=(none)
+[2026-04-09 21:56:25.611] isToolAvailable: mcp_aidevops-graph — fallback fullName match: false
+[2026-04-09 21:56:36.510] NuGet source query failed: https://msazure.pkgs.visualstudio.com/One/_packaging/AIDevOps/nuget/v3/index.json: HTTP 401 from https://msazure.pkgs.visualstudio.com/One/_packaging/AIDevOps/nuget/v3/index.json
+[2026-04-09 21:56:36.511] Feed poll failed (1/3): All NuGet sources failed: https://msazure.pkgs.visualstudio.com/One/_packaging/AIDevOps/nuget/v3/index.json: HTTP 401 from https://msazure.pkgs.visualstudio.com/One/_packaging/AIDevOps/nuget/v3/index.json
+[2026-04-09 21:56:58.959] isToolAvailable: mcp_aidevops-graph → expectedServer="aidevops-graph", truncatedPrefix=(none)
+[2026-04-09 21:56:58.960] isToolAvailable: mcp_aidevops-graph — fallback fullName match: false
+[2026-04-09 21:57:29.043] isToolAvailable: mcp_aidevops-graph → expectedServer="aidevops-graph", truncatedPrefix=(none)
+[2026-04-09 21:57:29.043] isToolAvailable: mcp_aidevops-graph — fallback fullName match: false
+[2026-04-09 21:58:11.697] isToolAvailable: mcp_aidevops-graph → expectedServer="aidevops-graph", truncatedPrefix=(none)
+[2026-04-09 21:58:11.697] isToolAvailable: mcp_aidevops-graph — fallback fullName match: false
+[2026-04-09 21:58:11.697] ensureToolDependencies: poll #4, still waiting for: mcp_aidevops-graph

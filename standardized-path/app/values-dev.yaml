@@ -1,0 +1,8 @@
+# Dev environment overrides
+replicaCount: 1
+
+env:
+  - name: ENVIRONMENT
+    value: "dev"
+  - name: MESSAGE
+    value: "Hello from Dev Platform"

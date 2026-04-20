@@ -9,7 +9,7 @@ Improve this repository so it demonstrates stronger platform engineering judgmen
 The repository currently mixes several concerns in a way that weakens the overall platform narrative:
 
 - Infrastructure provisioning, node configuration, GitOps, raw Kubernetes manifests, and Helm packaging are all combined in one flow.
-- There are multiple deployment paths instead of one supported golden path.
+- There are multiple deployment paths instead of one supported standardized path.
 - GitOps is partially introduced through Argo CD, but the repository does not yet have a single declarative source of truth.
 - The repository does not clearly show a tenant-facing platform contract for application teams.
 - Duplicate and inconsistent assets make the repo harder to understand quickly.
@@ -47,7 +47,7 @@ The README should explain:
 
 - the platform goal
 - the target users
-- the golden path for deploying an app
+- the standardized path for deploying an app
 - the role of Terraform, Argo CD, and Helm
 
 ### 2. Restructure the Repository
@@ -59,7 +59,7 @@ infra/
 platform/bootstrap/
 platform/addons/
 platform/apps/
-golden-path/
+standardized-path/
 docs/
 ```
 
@@ -69,7 +69,7 @@ Suggested ownership:
 - `platform/bootstrap/`: Argo CD installation and initial cluster bootstrap
 - `platform/addons/`: ingress, cert-manager, external-dns, observability, policies
 - `platform/apps/`: application definitions reconciled by Argo CD
-- `golden-path/`: reusable Helm chart or application template
+- `standardized-path/`: reusable Helm chart or application template
 - `docs/`: architecture, onboarding, operations, tradeoffs
 
 ### 3. Remove Competing Deployment Paths
@@ -174,7 +174,7 @@ Recommended cleanup:
 
 1. Clarify the repository narrative in `README.md`
 2. Choose Argo CD as the single GitOps controller
-3. Keep one Helm chart as the application golden path
+3. Keep one Helm chart as the application standardized path
 4. Reorganize the repository into infrastructure and platform layers
 5. Remove Ansible from the main steady-state platform flow
 6. Add environment-specific application promotion structure
