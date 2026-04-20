@@ -9,6 +9,6 @@ Current intent:
 
 The single supported application deployment source for the app is:
 
-- `../my-app/`
+- `../../standardized-path/app/`
 
 Do not treat the raw application manifests in this directory as the steady-state source of truth for application delivery.

@@ -1,4 +1,0 @@
-# Stage overrides
-replicaCount: 2
-image:
-  tag: "1.0.0-rc1"

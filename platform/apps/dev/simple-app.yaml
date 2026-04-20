@@ -7,12 +7,11 @@ spec:
   project: default
   source:
     repoURL: https://github.com/tukue/simpleAppInfraCode.git
-    targetRevision: HEAD
+    targetRevision: main
     path: standardized-path/app
     helm:
       valueFiles:
-        - values.yaml
-        - values-dev.yaml
+        - ../../platform/apps/dev/values.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: dev

@@ -20,7 +20,7 @@ provider "aws" {
 }
 
 module "vpc" {
-  source = "./modules/VPC"
+  source = "./modules/vpc"
 
   vpc_cidr      = var.vpc_cidr
   subnet_1_cidr = var.subnet_1_cidr

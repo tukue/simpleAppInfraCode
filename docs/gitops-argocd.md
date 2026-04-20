@@ -64,9 +64,9 @@ Until the repository restructure is complete, use these rules:
 
 The next GitOps improvements are:
 
-1. Keep Argo CD pointed at the single supported Helm chart in `my-app/`.
-2. Move GitOps assets into a clearer platform bootstrap structure.
-3. Add environment-specific promotion structure for `dev`, `stage`, and `prod`.
+1. Keep Argo CD pointed at the single supported Helm chart in `standardized-path/app/`.
+2. Keep environment-specific overrides under `platform/apps/<env>/values.yaml`.
+3. Pin Argo CD applications to an explicit revision such as `main`.
 4. Add validation so manifest and chart changes can be checked in CI.
 
 ## Out Of Scope

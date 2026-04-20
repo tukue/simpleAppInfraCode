@@ -4,7 +4,7 @@ This chart is a deprecated transitional asset.
 
 The single supported application deployment path for this repository is the Helm chart in:
 
-- `my-app/`
+- `../../standardized-path/app/`
 
 Do not add new features or environment configuration to `helm/simple-app/`.
 
