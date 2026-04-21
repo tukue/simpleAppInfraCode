@@ -97,7 +97,7 @@ resource "aws_iam_policy" "cloudwatch_logs" {
           "logs:DescribeLogStreams"
         ]
         Effect   = "Allow"
-        Resource = "*"
+        Resource = "arn:aws:logs:*:*:log-group:/aws/eks/*"
       }
     ]
   })

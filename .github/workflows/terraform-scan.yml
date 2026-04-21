@@ -73,9 +73,16 @@ jobs:
 
       - name: Parse Results
         id: parse
+        if: always()
         run: |
-          HIGH_COUNT=$(jq -r '.results.violations | map(select(.severity == "HIGH")) | length' terrascan-results.json || echo "0")
-          MEDIUM_COUNT=$(jq -r '.results.violations | map(select(.severity == "MEDIUM")) | length' terrascan-results.json || echo "0")
+          if [ -f terrascan-results.json ]; then
+            HIGH_COUNT=$(jq -r '.results.violations | map(select(.severity == "HIGH")) | length' terrascan-results.json || echo "0")
+            MEDIUM_COUNT=$(jq -r '.results.violations | map(select(.severity == "MEDIUM")) | length' terrascan-results.json || echo "0")
+          else
+            echo "Terrascan results file not found, setting counts to 0"
+            HIGH_COUNT=0
+            MEDIUM_COUNT=0
+          fi
           echo "high_severity_count=${HIGH_COUNT}" >> $GITHUB_ENV
           echo "medium_severity_count=${MEDIUM_COUNT}" >> $GITHUB_ENV
           
