@@ -3,6 +3,12 @@ variable "region" {
   type        = string
 }
 
+variable "environment" {
+  description = "Environment name (dev, stage, prod)"
+  type        = string
+  default     = "dev"
+}
+
 variable "vpc_cidr" {
   description = "CIDR block for the VPC"
   type        = string
@@ -18,18 +24,8 @@ variable "subnet_2_cidr" {
   type        = string
 }
 
-variable "eks_role_name" {
-  description = "Name of the EKS IAM role"
-  type        = string
-}
-
 variable "cluster_name" {
   description = "Name of the EKS cluster"
-  type        = string
-}
-
-variable "node_role_name" {
-  description = "Name of the node group IAM role"
   type        = string
 }
 
