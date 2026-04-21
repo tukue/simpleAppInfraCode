@@ -1,0 +1,104 @@
+name: Platform Validation
+
+on:
+  push:
+    paths:
+      - "infra/**"
+      - "platform/**"
+      - "standardized-path/**"
+      - "buildspec.yaml"
+      - ".github/workflows/platform-validate.yml"
+  pull_request:
+    paths:
+      - "infra/**"
+      - "platform/**"
+      - "standardized-path/**"
+      - "buildspec.yaml"
+      - ".github/workflows/platform-validate.yml"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: false
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.6.6"
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: "v3.14.4"
+
+      - name: Terraform format check
+        run: terraform -chdir=infra fmt -check -recursive
+
+      - name: Terraform init
+        run: terraform -chdir=infra init -backend=false
+
+      - name: Terraform validate
+        run: terraform -chdir=infra validate
+
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: latest
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run TFLint
+        run: |
+          cd infra
+          tflint --init
+          tflint --recursive
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Trivy
+        run: |
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install trivy
+
+      - name: Scan Terraform with Trivy
+        run: trivy config --severity HIGH,CRITICAL infra/
+
+      - name: Setup kubeconform
+        run: |
+          wget https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz
+          tar xf kubeconform-linux-amd64.tar.gz
+          sudo mv kubeconform /usr/local/bin/
+
+      - name: Helm lint
+        run: |
+          helm lint standardized-path/app -f platform/apps/dev/values.yaml
+          helm lint standardized-path/app -f platform/apps/stage/values.yaml
+          helm lint standardized-path/app -f platform/apps/prod/values.yaml
+
+      - name: Render manifests
+        run: |
+          helm template simple-app-dev standardized-path/app -f platform/apps/dev/values.yaml > /tmp/dev.yaml
+          helm template simple-app-stage standardized-path/app -f platform/apps/stage/values.yaml > /tmp/stage.yaml
+          helm template simple-app-prod standardized-path/app -f platform/apps/prod/values.yaml > /tmp/prod.yaml
+
+      - name: Validate manifests with kubeconform
+        run: |
+          kubeconform -summary -output json /tmp/dev.yaml
+          kubeconform -summary -output json /tmp/stage.yaml
+          kubeconform -summary -output json /tmp/prod.yaml
+
+      - name: Validate Argo CD applications
+        run: |
+          kubeconform -summary -skip Application platform/apps/dev/simple-app.yaml
+          kubeconform -summary -skip Application platform/apps/stage/simple-app.yaml
+          kubeconform -summary -skip Application platform/apps/prod/simple-app.yaml
+
+      - name: Validate bootstrap manifests
+        run: kubeconform -summary -ignore-missing-schemas platform/bootstrap/*.yaml

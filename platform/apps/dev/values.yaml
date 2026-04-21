@@ -1,0 +1,11 @@
+replicaCount: 1
+
+image:
+  repository: 944684220857.dkr.ecr.eu-north-1.amazonaws.com/app
+  tag: "1.0.0-dev.1"
+
+env:
+  - name: ENVIRONMENT
+    value: "dev"
+  - name: MESSAGE
+    value: "Hello from the dev platform"
