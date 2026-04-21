@@ -1,10 +1,22 @@
+terraform {
+  required_version = ">= 1.6.0"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
 resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr
   enable_dns_hostnames = true
   enable_dns_support   = true
 
   tags = {
-    Name = "${var.environment}-vpc"
+    Name        = "${var.environment}-vpc"
+    Environment = var.environment
+    ManagedBy   = "Terraform"
   }
 }
 
@@ -12,7 +24,9 @@ resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "${var.environment}-igw"
+    Name        = "${var.environment}-igw"
+    Environment = var.environment
+    ManagedBy   = "Terraform"
   }
 }
 
@@ -24,6 +38,8 @@ resource "aws_subnet" "subnet_1" {
 
   tags = {
     Name                                        = "${var.environment}-subnet-1"
+    Environment                                 = var.environment
+    ManagedBy                                   = "Terraform"
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
     "kubernetes.io/role/elb"                    = "1"
   }
@@ -37,6 +53,8 @@ resource "aws_subnet" "subnet_2" {
 
   tags = {
     Name                                        = "${var.environment}-subnet-2"
+    Environment                                 = var.environment
+    ManagedBy                                   = "Terraform"
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
     "kubernetes.io/role/elb"                    = "1"
   }
@@ -51,7 +69,9 @@ resource "aws_route_table" "main" {
   }
 
   tags = {
-    Name = "${var.environment}-route-table"
+    Name        = "${var.environment}-route-table"
+    Environment = var.environment
+    ManagedBy   = "Terraform"
   }
 }
 

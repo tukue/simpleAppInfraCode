@@ -1,3 +1,13 @@
+terraform {
+  required_version = ">= 1.6.0"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
 # Enhanced IAM Module with better role separation and permissions
 
 # EKS Cluster Role

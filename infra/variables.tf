@@ -23,11 +23,6 @@ variable "eks_role_name" {
   type        = string
 }
 
-variable "eks_sg_name" {
-  description = "Name of the EKS security group"
-  type        = string
-}
-
 variable "cluster_name" {
   description = "Name of the EKS cluster"
   type        = string
@@ -56,10 +51,4 @@ variable "min_size" {
 variable "max_size" {
   description = "Maximum number of worker nodes"
   type        = number
-}
-
-variable "enable_ansible" {
-  description = "Flag to enable or disable Ansible configuration"
-  type        = bool
-  default     = false
 }
