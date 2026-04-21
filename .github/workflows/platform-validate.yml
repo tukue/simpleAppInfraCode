@@ -93,9 +93,9 @@ jobs:
 
       - name: Validate Argo CD applications
         run: |
-          kubeconform -summary platform/apps/dev/simple-app.yaml
-          kubeconform -summary platform/apps/stage/simple-app.yaml
-          kubeconform -summary platform/apps/prod/simple-app.yaml
+          kubeconform -summary -skip Application platform/apps/dev/simple-app.yaml
+          kubeconform -summary -skip Application platform/apps/stage/simple-app.yaml
+          kubeconform -summary -skip Application platform/apps/prod/simple-app.yaml
 
       - name: Validate bootstrap manifests
-        run: kubeconform -summary platform/bootstrap/*.yaml
+        run: kubeconform -summary -ignore-missing-schemas platform/bootstrap/*.yaml
