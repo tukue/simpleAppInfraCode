@@ -1,18 +1,53 @@
 # Platform Add-ons
 
-This directory is reserved for shared in-cluster services that are managed through GitOps rather than manually installed.
+This directory contains shared in-cluster services managed through GitOps with Argo CD.
 
-Typical add-ons for this platform layer include:
+## Available Add-ons
 
-- ingress controller
-- cert-manager
-- external-dns
-- observability stack
-- policy enforcement
-- external secrets integration
+### nginx-ingress
+Ingress controller for routing external traffic to services.
 
-Add-ons should follow the same ownership model as the rest of the platform:
+**Installation:**
+```bash
+kubectl apply -f platform/addons/nginx-ingress.yaml
+```
 
-- Terraform provisions cloud prerequisites
-- Argo CD reconciles the in-cluster add-on resources
-- application teams consume the resulting platform capabilities rather than installing their own stack components
+### cert-manager
+Automated TLS certificate management for Kubernetes.
+
+**Installation:**
+```bash
+kubectl apply -f platform/addons/cert-manager.yaml
+```
+
+### metrics-server
+Cluster-wide resource metrics for horizontal pod autoscaling.
+
+**Installation:**
+```bash
+kubectl apply -f platform/addons/metrics-server.yaml
+```
+
+### external-dns (Placeholder)
+Automatic DNS record management for services and ingresses.
+
+**Note:** Requires IRSA configuration. Update the service account annotation with your IAM role ARN.
+
+**Installation:**
+```bash
+kubectl apply -f platform/addons/external-dns.yaml
+```
+
+## Add-on Ownership Model
+
+- **Terraform** provisions cloud prerequisites (IAM roles, DNS zones)
+- **Argo CD** reconciles in-cluster add-on resources
+- **Application teams** consume platform capabilities without installing their own infrastructure
+
+## Applying All Add-ons
+
+```bash
+kubectl apply -f platform/addons/
+```
+
+All add-ons use automated sync policies for drift detection and self-healing.
