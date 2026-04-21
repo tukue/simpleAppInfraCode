@@ -32,3 +32,8 @@ override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
+
+
+# AI/IDE logs and cache
+.aidevops/
+.codex
