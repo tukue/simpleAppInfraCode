@@ -43,6 +43,33 @@ jobs:
       - name: Terraform validate
         run: terraform -chdir=infra validate
 
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: latest
+
+      - name: Run TFLint
+        run: |
+          cd infra
+          tflint --init
+          tflint --recursive
+
+      - name: Setup Trivy
+        run: |
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install trivy
+
+      - name: Scan Terraform with Trivy
+        run: trivy config --severity HIGH,CRITICAL infra/
+
+      - name: Setup kubeconform
+        run: |
+          wget https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz
+          tar xf kubeconform-linux-amd64.tar.gz
+          sudo mv kubeconform /usr/local/bin/
+
       - name: Helm lint
         run: |
           helm lint standardized-path/app -f platform/apps/dev/values.yaml
@@ -54,3 +81,18 @@ jobs:
           helm template simple-app-dev standardized-path/app -f platform/apps/dev/values.yaml > /tmp/dev.yaml
           helm template simple-app-stage standardized-path/app -f platform/apps/stage/values.yaml > /tmp/stage.yaml
           helm template simple-app-prod standardized-path/app -f platform/apps/prod/values.yaml > /tmp/prod.yaml
+
+      - name: Validate manifests with kubeconform
+        run: |
+          kubeconform -summary -output json /tmp/dev.yaml
+          kubeconform -summary -output json /tmp/stage.yaml
+          kubeconform -summary -output json /tmp/prod.yaml
+
+      - name: Validate Argo CD applications
+        run: |
+          kubeconform -summary platform/apps/dev/simple-app.yaml
+          kubeconform -summary platform/apps/stage/simple-app.yaml
+          kubeconform -summary platform/apps/prod/simple-app.yaml
+
+      - name: Validate bootstrap manifests
+        run: kubeconform -summary platform/bootstrap/*.yaml

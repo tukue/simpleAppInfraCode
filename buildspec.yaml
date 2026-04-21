@@ -17,9 +17,19 @@ phases:
       - terraform -chdir=infra init -backend=false
       - terraform -chdir=infra fmt -check
       - terraform -chdir=infra validate
+      - curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+      - cd infra && tflint --init && tflint --recursive && cd ..
+      - wget https://github.com/aquasecurity/trivy/releases/download/v0.48.0/trivy_0.48.0_Linux-64bit.tar.gz
+      - tar zxvf trivy_0.48.0_Linux-64bit.tar.gz
+      - ./trivy config --severity HIGH,CRITICAL infra/
       - helm lint ${CHART_PATH} -f platform/apps/dev/values.yaml
       - helm lint ${CHART_PATH} -f platform/apps/stage/values.yaml
       - helm lint ${CHART_PATH} -f platform/apps/prod/values.yaml
       - helm template simple-app-dev ${CHART_PATH} -f platform/apps/dev/values.yaml > /tmp/simple-app-dev.yaml
       - helm template simple-app-stage ${CHART_PATH} -f platform/apps/stage/values.yaml > /tmp/simple-app-stage.yaml
       - helm template simple-app-prod ${CHART_PATH} -f platform/apps/prod/values.yaml > /tmp/simple-app-prod.yaml
+      - wget https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz
+      - tar xf kubeconform-linux-amd64.tar.gz
+      - ./kubeconform -summary /tmp/simple-app-dev.yaml
+      - ./kubeconform -summary /tmp/simple-app-stage.yaml
+      - ./kubeconform -summary /tmp/simple-app-prod.yaml
