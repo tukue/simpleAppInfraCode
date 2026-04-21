@@ -1,11 +1,11 @@
 output "cluster_name" {
   description = "Name of the EKS cluster"
-  value       = aws_eks_cluster.eks_cluster.name
+  value       = aws_eks_cluster.main.name
 }
 
 output "cluster_endpoint" {
   description = "Endpoint for EKS control plane"
-  value       = aws_eks_cluster.eks_cluster.endpoint
+  value       = aws_eks_cluster.main.endpoint
 }
 
 output "cluster_security_group_id" {
@@ -22,13 +22,13 @@ output "worker_node_ips" {
 data "aws_instances" "worker_nodes" {
   filter {
     name   = "tag:eks:cluster-name"
-    values = [aws_eks_cluster.eks_cluster.name]
+    values = [aws_eks_cluster.main.name]
   }
 
   filter {
     name   = "tag:eks:nodegroup-name"
-    values = [aws_eks_node_group.node_group.node_group_name]
+    values = [aws_eks_node_group.main.node_group_name]
   }
 
-  depends_on = [aws_eks_node_group.node_group]
+  depends_on = [aws_eks_node_group.main]
 }
