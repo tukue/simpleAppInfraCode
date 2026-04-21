@@ -31,11 +31,20 @@ kubectl apply -f platform/addons/metrics-server.yaml
 ### external-dns (Placeholder)
 Automatic DNS record management for services and ingresses.
 
-**Note:** Requires IRSA configuration. Update the service account annotation with your IAM role ARN.
+**Note:** Requires IRSA configuration and environment variables.
 
-**Installation:**
+**Setup:**
 ```bash
-kubectl apply -f platform/addons/external-dns.yaml
+export AWS_ACCOUNT_ID="123456789012"
+export AWS_REGION="eu-north-1"
+./platform/addons/apply-addons.sh
+```
+
+Or apply individually:
+```bash
+export AWS_ACCOUNT_ID="123456789012"
+export AWS_REGION="eu-north-1"
+envsubst < platform/addons/external-dns.yaml | kubectl apply -f -
 ```
 
 ## Add-on Ownership Model
@@ -46,8 +55,18 @@ kubectl apply -f platform/addons/external-dns.yaml
 
 ## Applying All Add-ons
 
+**With environment variables:**
 ```bash
-kubectl apply -f platform/addons/
+export AWS_ACCOUNT_ID="123456789012"
+export AWS_REGION="eu-north-1"
+./platform/addons/apply-addons.sh
+```
+
+**Without environment variable substitution (for addons that don't need it):**
+```bash
+kubectl apply -f platform/addons/nginx-ingress.yaml
+kubectl apply -f platform/addons/cert-manager.yaml
+kubectl apply -f platform/addons/metrics-server.yaml
 ```
 
 All add-ons use automated sync policies for drift detection and self-healing.

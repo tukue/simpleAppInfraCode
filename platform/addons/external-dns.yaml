@@ -27,7 +27,10 @@ spec:
             memory: 128Mi
         serviceAccount:
           annotations:
-            eks.amazonaws.com/role-arn: "arn:aws:iam::ACCOUNT_ID:role/external-dns-role"
+            eks.amazonaws.com/role-arn: "arn:aws:iam::${AWS_ACCOUNT_ID}:role/external-dns-role"
+        env:
+          - name: AWS_REGION
+            value: "${AWS_REGION}"
   destination:
     server: https://kubernetes.default.svc
     namespace: external-dns
