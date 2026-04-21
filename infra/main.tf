@@ -42,13 +42,13 @@ module "vpc" {
 module "eks" {
   source = "./modules/eks"
 
-  vpc_id             = module.vpc.vpc_id
-  subnet_ids         = module.vpc.subnet_ids
-  cluster_name       = var.cluster_name
-  node_group_name    = var.node_group_name
-  cluster_role_arn   = module.iam.cluster_role_arn
-  node_role_arn      = module.iam.node_role_arn
-  desired_size       = var.desired_size
-  min_size           = var.min_size
-  max_size           = var.max_size
+  vpc_id           = module.vpc.vpc_id
+  subnet_ids       = module.vpc.subnet_ids
+  cluster_name     = var.cluster_name
+  node_group_name  = var.node_group_name
+  cluster_role_arn = module.iam.cluster_role_arn
+  node_role_arn    = module.iam.node_role_arn
+  desired_size     = var.desired_size
+  min_size         = var.min_size
+  max_size         = var.max_size
 }
