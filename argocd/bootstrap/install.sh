@@ -10,7 +10,7 @@ echo "=== Installing Argo CD ${ARGOCD_VERSION} ==="
 kubectl create namespace "${NAMESPACE}" --dry-run=client -o yaml | kubectl apply -f -
 
 kubectl apply -n "${NAMESPACE}" \
-  -f "https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml"
+  -f "https://raw.githubusercontent.com/argoproj/argo-cd/${ARGOCD_VERSION}/manifests/install.yaml"
 
 # Wait for Argo CD to be ready
 echo "=== Waiting for Argo CD components to be ready ==="

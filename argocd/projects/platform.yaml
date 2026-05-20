@@ -29,5 +29,8 @@ spec:
       kind: ClusterRoleBinding
     - group: apiextensions.k8s.io
       kind: CustomResourceDefinition
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
   orphanedResources:
     warn: true

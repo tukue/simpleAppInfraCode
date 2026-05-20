@@ -33,7 +33,7 @@ spec:
         path: standardized-path/app
         helm:
           valueFiles:
-            - "../../platform/apps/{{env}}/values.yaml"
+            - "/platform/apps/{{env}}/values.yaml"
       destination:
         server: https://kubernetes.default.svc
         namespace: "{{env}}"

@@ -1,17 +1,16 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: root
+  name: application-sets
   namespace: argocd
 spec:
   project: platform
   source:
     repoURL: https://github.com/tukue/simpleAppInfraCode.git
     targetRevision: main
-    path: argocd/app-of-apps
+    path: argocd/appsets
     directory:
       recurse: false
-      include: "{platform-addons.yaml,application-sets.yaml}"
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
@@ -22,9 +21,9 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - PruneLast=true
-      - ApplyOutOfSyncOnly=true
-  ignoreDifferences:
-    - group: argoproj.io
-      kind: Application
-      jsonPointers:
-        - /spec/source/targetRevision
+    retry:
+      limit: 3
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
