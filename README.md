@@ -17,11 +17,17 @@ Application teams should not need to assemble raw Kubernetes manifests, bespoke 
 
 ```text
 .
+├── argocd/               # Argo CD control plane configuration
+│   ├── projects/         # AppProject definitions for platform and tenant teams
+│   ├── app-of-apps/      # Root and aggregate Application definitions
+│   ├── appsets/          # ApplicationSet generators for multi-env deployment
+│   ├── config/           # Argo CD controller ConfigMap and RBAC
+│   └── bootstrap/        # Argo CD installation script
 ├── infra/                # Terraform and Terragrunt for VPC, IAM, and EKS
 ├── platform/
-│   ├── bootstrap/        # Argo CD install and foundational cluster guardrails
+│   ├── bootstrap/        # Foundational cluster guardrails (namespaces, quotas)
 │   ├── addons/           # Shared add-ons managed through GitOps
-│   └── apps/             # Environment-specific Argo CD applications and values
+│   └── apps/             # Environment-specific application values and manifests
 ├── standardized-path/
 │   └── app/              # Reusable Helm chart used by tenant applications
 ├── docs/                 # Architecture, platform contract, and operations
@@ -58,9 +64,16 @@ The platform chart applies defaults for:
 
 ## GitOps Model
 
-Argo CD is the single supported GitOps controller. Each environment has one `Application` manifest under `platform/apps/<env>/simple-app.yaml`, and each one renders the same Helm chart with environment-specific overrides from `platform/apps/<env>/values.yaml`.
+Argo CD is the single supported GitOps controller. The control plane configuration lives in `argocd/`:
 
-The Argo CD applications are pinned to the `main` branch rather than `HEAD`, and the chart values use explicit image tags instead of `latest`.
+- **AppProjects** (`argocd/projects/`) define ownership boundaries between platform team and tenant teams.
+- **App of Apps** (`argocd/app-of-apps/root.yaml`) manages aggregate Applications that reconcile platform add-ons and environment workloads.
+- **ApplicationSet** (`argocd/appsets/environments.yaml`) generates per-environment Application specs from a template, promoting consistent delivery across dev, stage, and prod.
+- **Config** (`argocd/config/`) stores Argo CD controller ConfigMap overrides and RBAC policy.
+
+Each environment also has a standalone `Application` manifest under `platform/apps/<env>/simple-app.yaml` as an alternative entry point. All manifests render the same Helm chart with environment-specific overrides from `platform/apps/<env>/values.yaml`.
+
+Applications are pinned to the `main` branch rather than `HEAD`, and chart values use explicit image tags instead of `latest`.
 
 ## Validation
 

@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: tenant-apps
+  namespace: argocd
+spec:
+  description: Tenant application workloads promoted through dev, stage, and prod
+  sourceRepos:
+    - https://github.com/tukue/simpleAppInfraCode.git
+  destinations:
+    - namespace: dev
+      server: https://kubernetes.default.svc
+    - namespace: stage
+      server: https://kubernetes.default.svc
+    - namespace: prod
+      server: https://kubernetes.default.svc
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: Deployment
+    - group: ""
+      kind: Service
+    - group: ""
+      kind: ConfigMap
+    - group: ""
+      kind: Secret
+    - group: ""
+      kind: ServiceAccount
+    - group: autoscaling
+      kind: HorizontalPodAutoscaler
+    - group: networking.k8s.io
+      kind: Ingress
+    - group: policy
+      kind: PodDisruptionBudget
+  roles:
+    - name: team-admin
+      description: Admin access to the tenant-apps project
+      policies:
+        - p, proj:tenant-apps:team-admin, applications, *, tenant-apps/*, allow
+      groups: []
+  orphanedResources:
+    warn: true

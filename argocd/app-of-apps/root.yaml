@@ -1,26 +1,29 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: simple-app-dev
+  name: root
   namespace: argocd
-  labels:
-    app: simple-app
-    environment: dev
 spec:
-  project: tenant-apps
+  project: platform
   source:
     repoURL: https://github.com/tukue/simpleAppInfraCode.git
     targetRevision: main
-    path: standardized-path/app
-    helm:
-      valueFiles:
-        - ../../platform/apps/dev/values.yaml
+    path: argocd/app-of-apps
+    directory:
+      recurse: true
   destination:
     server: https://kubernetes.default.svc
-    namespace: dev
+    namespace: argocd
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - PruneLast=true
+      - ApplyOutOfSyncOnly=true
+  ignoreDifferences:
+    - group: argoproj.io
+      kind: Application
+      jsonPointers:
+        - /spec/source/targetRevision

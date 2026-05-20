@@ -3,8 +3,11 @@ kind: Application
 metadata:
   name: simple-app-prod
   namespace: argocd
+  labels:
+    app: simple-app
+    environment: prod
 spec:
-  project: default
+  project: tenant-apps
   source:
     repoURL: https://github.com/tukue/simpleAppInfraCode.git
     targetRevision: main
