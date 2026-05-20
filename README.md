@@ -1,90 +1,204 @@
-# EKS Internal Developer Platform Reference
+# EKS Internal Developer Platform
 
-This repository presents a small internal developer platform on Amazon EKS. The intended users are platform engineers who provision and bootstrap the cluster, and application teams who deploy workloads through a single supported delivery contract.
+A platform engineering reference implementation on Amazon EKS. This repository models a small internal developer platform with clear ownership boundaries, a single paved path for application delivery, and a GitOps-driven operational model.
 
-The repo is organized around one platform story:
+## Platform Model
 
-- Terraform provisions AWS infrastructure in `infra/`
-- Argo CD reconciles in-cluster state from Git in `platform/`
-- One reusable Helm chart in `standardized-path/app/` defines the tenant-facing application contract
-- Environment promotion is expressed through `platform/apps/dev`, `platform/apps/stage`, and `platform/apps/prod`
+```text
+┌──────────────────────────────────────────────────────────┐
+│                    Platform Team                          │
+│  ┌──────────┐  ┌──────────────┐  ┌────────────────────┐  │
+│  │  infra/  │  │   argocd/   │  │  platform/          │  │
+│  │ Terraform│  │ AppProjects │  │  bootstrap/         │  │
+│  │  VPC     │  │ App of Apps │  │  addons/            │  │
+│  │  IAM     │  │ Application │  │  guardrails         │  │
+│  │  EKS     │  │   Sets      │  │  network policies   │  │
+│  └──────────┘  └──────────────┘  └────────────────────┘  │
+│                     │                                     │
+│            Argo CD reconciles                              │
+│              from Git                                      │
+├──────────────────────────────────────────────────────────┤
+│                    App Teams                               │
+│  ┌────────────────────────────────────────────────────┐   │
+│  │  standardized-path/app/  (Helm contract)           │   │
+│  │  platform/apps/<env>/values.yaml  (overrides)      │   │
+│  │  image, port, replicas, env, secrets, ingress      │   │
+│  └────────────────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────────┘
+```
 
-## What Problem The Platform Solves
+## Who This Platform Serves
 
-Application teams should not need to assemble raw Kubernetes manifests, bespoke ingress configuration, and ad hoc runtime defaults for every service. This platform gives them a standardized path that covers deployment, service exposure, resource policies, and baseline security settings.
+- **Platform engineers** provision and operate the cluster infrastructure, manage add-ons, and define the application delivery contract.
+- **Application teams** supply lightweight configuration values and receive a standardized deployment with security defaults, resource policies, and GitOps-driven promotion.
+
+## What Problem This Platform Solves
+
+Without a platform, every service team independently assembles Kubernetes manifests, configures ingress, sets up RBAC, manages certificates, and defines deployment pipelines. This creates inconsistency, security gaps, and operational overhead.
+
+This platform gives teams a **paved road** — a single supported path that covers deployment, service exposure, resource policies, security defaults, and environment promotion. Teams that stay on the paved road get these guarantees automatically. Teams can still opt out, but they assume the operational burden.
 
 ## Repository Layout
 
 ```text
 .
-├── argocd/               # Argo CD control plane configuration
-│   ├── projects/         # AppProject definitions for platform and tenant teams
-│   ├── app-of-apps/      # Root and aggregate Application definitions
-│   ├── appsets/          # ApplicationSet generators for multi-env deployment
-│   ├── config/           # Argo CD controller ConfigMap and RBAC
-│   └── bootstrap/        # Argo CD installation script
-├── infra/                # Terraform and Terragrunt for VPC, IAM, and EKS
-├── platform/
-│   ├── bootstrap/        # Foundational cluster guardrails (namespaces, quotas)
-│   ├── addons/           # Shared add-ons managed through GitOps
-│   └── apps/             # Environment-specific application values and manifests
-├── standardized-path/
-│   └── app/              # Reusable Helm chart used by tenant applications
-├── docs/                 # Architecture, platform contract, and operations
-└── legacy/               # Historical assets kept out of the supported path
+├── argocd/               # Argo CD control plane
+│   ├── projects/         # AppProject definitions (ownership boundaries)
+│   ├── app-of-apps/      # Root + aggregate Application definitions
+│   ├── appsets/          # ApplicationSet generators
+│   ├── config/           # Controller ConfigMap + RBAC policy
+│   └── bootstrap/        # Installation script
+├── infra/                # Cloud infrastructure (Terraform)
+│   ├── modules/          # Reusable Terraform modules
+│   │   ├── vpc/
+│   │   ├── iam/
+│   │   └── eks/
+│   ├── backend.tf        # Remote state configuration
+│   └── terragrunt.hcl    # Terragrunt wrapper
+├── platform/             # Declarative cluster state (Argo CD)
+│   ├── bootstrap/        # Namespaces, quotas, network policies
+│   ├── addons/           # Ingress, cert-manager, metrics-server, external-dns
+│   └── apps/             # Environment-specific values per app
+│       ├── dev/
+│       ├── stage/
+│       └── prod/
+├── standardized-path/    # Golden path: reusable Helm chart
+│   └── app/              # Tenant-facing application contract
+├── docs/                 # Architecture, contract, operations
+└── legacy/               # Historical assets (not in supported path)
 ```
 
-## Supported Workflow
+## Ownership Boundaries
 
-1. Platform engineers provision AWS infrastructure from `infra/`.
-2. Platform engineers bootstrap Argo CD and base namespaces from `platform/bootstrap/`.
-3. Application teams supply the inputs required by the Helm contract in `standardized-path/app/`.
-4. Argo CD reconciles the application manifests for `dev`, `stage`, and `prod` from `platform/apps/`.
-5. Promotion happens by updating reviewed Git changes, not by manual cluster mutation.
+| Layer | Owns | Tool | Directory |
+|---|---|---|---|
+| **Infrastructure** | VPC, IAM roles, EKS cluster, node groups | Terraform | `infra/` |
+| **Argo CD Config** | AppProjects, App of Apps, ApplicationSets, RBAC | Argo CD (declarative) | `argocd/` |
+| **Cluster State** | Namespaces, quotas, add-ons, network policies | Argo CD | `platform/` |
+| **App Contract** | Deployment template, service, ingress, HPA, security context | Helm | `standardized-path/app/` |
+| **App Config** | Per-environment image tag, replicas, env vars | Helm values | `platform/apps/<env>/` |
 
-## Platform Contract
+## Platform Contract (Tenant API)
 
-The supported tenant-facing inputs are documented in [docs/tenant-contract.md](/mnt/c/Users/tukue/simpleAppInfraCode/docs/tenant-contract.md:1). In practice, a team provides:
+### What app teams provide
 
-- immutable container image reference
-- service port
-- replica count or autoscaling settings
-- ingress exposure rules
-- resource requests and limits
-- environment variables
-- secret references or service account annotations when needed
+Inputs are defined in the Helm values schema at `standardized-path/app/values.yaml`:
 
-The platform chart applies defaults for:
+- `image.repository` + `image.tag` — immutable container reference
+- `service.port` — application port
+- `replicaCount` or `autoscaling.*` — scaling strategy
+- `ingress.*` — external exposure rules
+- `resources.requests` + `resources.limits` — CPU and memory
+- `env` — environment variables
+- `serviceAccount.annotations` — workload identity (IRSA)
 
-- non-root containers
-- dropped Linux capabilities
-- read-only root filesystem
-- resource-aware deployments
-- namespaced delivery per environment
+### What the platform guarantees
 
-## GitOps Model
+- Non-root execution, dropped capabilities, read-only root filesystem
+- Resource limits enforced at the container and namespace level
+- Consistent service and ingress wiring
+- Environment isolation via dedicated namespaces with Pod Security Standards
+- GitOps-driven drift detection and self-healing
+- Explicit image tags (never `latest`), pinned branch revisions (never `HEAD`)
 
-Argo CD is the single supported GitOps controller. The control plane configuration lives in `argocd/`:
+### How teams interact with the platform
 
-- **AppProjects** (`argocd/projects/`) define ownership boundaries between platform team and tenant teams.
-- **App of Apps** (`argocd/app-of-apps/root.yaml`) manages aggregate Applications that reconcile platform add-ons and environment workloads.
-- **ApplicationSet** (`argocd/appsets/environments.yaml`) generates per-environment Application specs from a template, promoting consistent delivery across dev, stage, and prod.
-- **Config** (`argocd/config/`) stores Argo CD controller ConfigMap overrides and RBAC policy.
+1. Fork or reference the `standardized-path/app/` Helm chart.
+2. Create or update environment values files under `platform/apps/<env>/`.
+3. Open a pull request. CI validates the chart renders correctly.
+4. Merge triggers Argo CD to reconcile the change into the cluster.
+5. Promotion from dev → stage → prod follows the same Git workflow.
 
-Each environment also has a standalone `Application` manifest under `platform/apps/<env>/simple-app.yaml` as an alternative entry point. All manifests render the same Helm chart with environment-specific overrides from `platform/apps/<env>/values.yaml`.
+## GitOps Delivery Pipeline
 
-Applications are pinned to the `main` branch rather than `HEAD`, and chart values use explicit image tags instead of `latest`.
+```text
+                    Git Push / PR Merge
+                            │
+                    ┌───────▼────────┐
+                    │  Root App      │
+                    │  (App of Apps) │
+                    └───────┬────────┘
+                            │
+              ┌─────────────┼─────────────┐
+              │             │             │
+     ┌────────▼──────┐ ┌───▼────┐ ┌─────▼──────┐
+     │ platform-     │ │ app.   │ │ per-env    │
+     │ addons        │ │ sets   │ │ App. or    │
+     │               │ │        │ │ AppSet     │
+     └───────────────┘ └────────┘ └────────────┘
+```
 
-## Validation
+1. **Root Application** (`argocd/app-of-apps/root.yaml`) watches its directory and reconciles child aggregate Applications.
+2. **Platform Add-ons** (`argocd/app-of-apps/platform-addons.yaml`) applies shared services from `platform/addons/` (ingress, cert-manager, metrics-server, external-dns).
+3. **ApplicationSets** (`argocd/appsets/environments.yaml`) generates per-environment Application specs from a list generator, promoting consistent delivery.
+4. **Standalone Applications** (`platform/apps/<env>/simple-app.yaml`) serve as alternative per-environment entry points.
 
-The repo validates the supported platform path through:
+## Platform Guardrails
 
-- Terraform formatting and validation
-- Helm linting
-- Helm template rendering for `dev`, `stage`, and `prod`
+| Guardrail | Implementation | Location |
+|---|---|---|
+| **Namespace isolation** | dev, stage, prod namespaces with Pod Security labels | `platform/bootstrap/namespaces.yaml` |
+| **Resource quotas** | CPU, memory, pod, and service limits per namespace | `platform/bootstrap/resource-quota.yaml` |
+| **Limit ranges** | Default container requests and limits per environment | `platform/bootstrap/limit-range.yaml` |
+| **Network policies** | Default deny, same-ns allow, ingress-controller allow | `platform/bootstrap/network-policy.yaml` |
+| **RBAC** | Read-only Role + RoleBinding for app developers | `platform/bootstrap/rbac-readonly.yaml` |
+| **Security context** | Non-root, drop all caps, read-only rootfs enforced in Helm | `standardized-path/app/templates/deployment.yaml` |
+| **AppProject boundaries** | Platform vs tenant-apps projects with resource whitelists | `argocd/projects/` |
 
-See `.github/workflows/` and `buildspec.yaml` for the validation entry points.
+## Validation Pipeline
+
+CI validates every change against the platform contract:
+
+| Check | Tool | Coverage |
+|---|---|---|
+| Terraform formatting | `terraform fmt -check` | `infra/**/*.tf` |
+| Terraform validation | `terraform validate` | `infra/` |
+| Terraform linting | TFLint | `infra/` (recursive, AWS plugin) |
+| IaC security scan | Trivy + Terrascan | `infra/` (HIGH/CRITICAL) |
+| Helm linting | `helm lint` | `standardized-path/app/` (dev, stage, prod) |
+| Manifest rendering | `helm template` | All 3 environments |
+| Kubernetes validation | kubeconform | Rendered manifests, Argo CD apps, bootstrap |
+
+See `.github/workflows/` and `buildspec.yaml` for the full CI configuration.
+
+## Environment Promotion Model
+
+```
+dev  ──►  stage  ──►  prod
+ 1 replica     2 replicas     3 replicas
+ 1.0.0-dev.1   1.0.0-rc1      1.0.0
+```
+
+The same Helm chart is promoted through environments by updating only the environment values files:
+
+- `platform/apps/dev/values.yaml`
+- `platform/apps/stage/values.yaml`
+- `platform/apps/prod/values.yaml`
+
+This keeps the application packaging stable while environment-specific policy and configuration remain visible in Git. Promotion progresses through reviewed pull requests, not direct cluster mutation.
+
+## Day-2 Operations
+
+| Operation | Method |
+|---|---|
+| Change AWS infrastructure | Terraform (`infra/`) |
+| Add/modify cluster add-on | GitOps (`platform/addons/`) |
+| Change app configuration | GitOps (`platform/apps/<env>/values.yaml`) |
+| Rollback a deployment | Revert the Git commit |
+| Add a new environment | Create values file + ApplicationSet entry |
+| Add a new tenant app | Create environment values + Application manifest |
+| Debug a failed sync | `kubectl describe application -n argocd` |
+| Scale an application | Update `replicaCount` or HPA config in Git |
 
 ## Historical Assets
 
-Older experiments remain in `legacy/` for reference, but they are not part of the steady-state platform story. That includes raw Kubernetes manifests, duplicate Helm assets, and Terraform plus Ansible flows that bypass GitOps.
+The `legacy/` directory contains earlier infrastructure experiments that are intentionally outside the supported platform path: raw Kubernetes manifests, a deprecated Helm chart, and Terraform + Ansible integration for node configuration. These are preserved for reference but are not part of the steady-state platform story.
+
+## Further Reading
+
+- [Platform Architecture](docs/architecture.md)
+- [Tenant Contract](docs/tenant-contract.md)
+- [Operations Guide](docs/operations.md)
+- [GitOps / Argo CD Decision Record](docs/gitops-argocd.md)
+- [Secret Management Strategy](docs/secret-management.md)
+- [Improvement Plan](IMPROVEMENTS.md)
