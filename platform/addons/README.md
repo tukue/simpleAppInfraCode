@@ -70,3 +70,10 @@ kubectl apply -f platform/addons/metrics-server.yaml
 ```
 
 All add-ons use automated sync policies for drift detection and self-healing.
+
+## GitOps Integration
+
+All add-on Application manifests belong to the `platform` project defined in `argocd/projects/platform.yaml`.
+They are automatically reconciled by the platform-addons aggregate Application
+(`argocd/app-of-apps/platform-addons.yaml`), which is managed by the root Application
+(`argocd/app-of-apps/root.yaml`).

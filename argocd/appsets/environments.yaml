@@ -1,0 +1,51 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: environments
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - env: dev
+            replicas: 1
+            imageTag: 1.0.0-dev.1
+            message: "Hello from the dev platform"
+          - env: stage
+            replicas: 2
+            imageTag: 1.0.0-rc1
+            message: "Hello from the stage platform"
+          - env: prod
+            replicas: 3
+            imageTag: 1.0.0
+            message: "Hello from the prod platform"
+  template:
+    metadata:
+      name: "simple-app-{{env}}"
+      labels:
+        app: simple-app
+        environment: "{{env}}"
+    spec:
+      project: tenant-apps
+      source:
+        repoURL: https://github.com/tukue/simpleAppInfraCode.git
+        targetRevision: main
+        path: standardized-path/app
+        helm:
+          valueFiles:
+            - "/platform/apps/{{env}}/values.yaml"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{env}}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+        retry:
+          limit: 3
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 2m
