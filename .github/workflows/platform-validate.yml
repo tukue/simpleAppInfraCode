@@ -6,6 +6,7 @@ on:
       - "infra/**"
       - "platform/**"
       - "standardized-path/**"
+      - "policy/**"
       - "buildspec.yaml"
       - ".github/workflows/platform-validate.yml"
   pull_request:
@@ -13,6 +14,7 @@ on:
       - "infra/**"
       - "platform/**"
       - "standardized-path/**"
+      - "policy/**"
       - "buildspec.yaml"
       - ".github/workflows/platform-validate.yml"
   workflow_dispatch:
@@ -102,3 +104,59 @@ jobs:
 
       - name: Validate bootstrap manifests
         run: kubeconform -summary -ignore-missing-schemas platform/bootstrap/*.yaml
+
+      - name: Setup conftest
+        run: |
+          CONFTEST_VERSION=$(curl -sL https://api.github.com/repos/open-policy-agent/conftest/releases/latest | grep tag_name | cut -d'"' -f4)
+          wget -q "https://github.com/open-policy-agent/conftest/releases/download/${CONFTEST_VERSION}/conftest_${CONFTEST_VERSION#v}_Linux_x86_64.tar.gz" -O /tmp/conftest.tar.gz
+          tar xzf /tmp/conftest.tar.gz -C /usr/local/bin/ conftest
+
+      - name: Validate EKS manifests with OPA policies
+        run: |
+          helm template simple-app-dev standardized-path/app -f platform/apps/dev/values.yaml | tr -d '\r' | conftest test -p policy/eks/ --no-color -
+          helm template simple-app-stage standardized-path/app -f platform/apps/stage/values.yaml | tr -d '\r' | conftest test -p policy/eks/ --no-color -
+          helm template simple-app-prod standardized-path/app -f platform/apps/prod/values.yaml | tr -d '\r' | conftest test -p policy/eks/ --no-color -
+
+  openshift-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: "v3.14.4"
+
+      - name: Render with OpenShift flags
+        run: |
+          helm template test standardized-path/app \
+            --set openshift.enabled=true \
+            --set openshift.route.enabled=true \
+            --set ingress.enabled=false \
+            > /tmp/openshift.yaml
+
+      - name: Verify Route is present
+        run: |
+          grep -q "kind: Route" /tmp/openshift.yaml && echo "PASS: Route found" || (echo "FAIL: Route missing"; exit 1)
+
+      - name: Verify Ingress is absent
+        run: |
+          grep -q "kind: Ingress" /tmp/openshift.yaml && (echo "FAIL: Ingress should be absent"; exit 1) || echo "PASS: Ingress correctly omitted"
+
+      - name: Verify securityContext is absent
+        run: |
+          grep -q "runAsNonRoot" /tmp/openshift.yaml && (echo "FAIL: securityContext should be absent on OpenShift"; exit 1) || echo "PASS: securityContext correctly omitted"
+
+      - name: Setup conftest
+        run: |
+          CONFTEST_VERSION=$(curl -sL https://api.github.com/repos/open-policy-agent/conftest/releases/latest | grep tag_name | cut -d'"' -f4)
+          wget -q "https://github.com/open-policy-agent/conftest/releases/download/${CONFTEST_VERSION}/conftest_${CONFTEST_VERSION#v}_Linux_x86_64.tar.gz" -O /tmp/conftest.tar.gz
+          tar xzf /tmp/conftest.tar.gz -C /usr/local/bin/ conftest
+
+      - name: Validate OpenShift manifests with OPA policies
+        run: |
+          helm template test standardized-path/app \
+            --set openshift.enabled=true \
+            --set openshift.route.enabled=true \
+            --set ingress.enabled=false \
+            | tr -d '\r' | conftest test -p policy/openshift/ --no-color -
