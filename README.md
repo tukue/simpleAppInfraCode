@@ -11,7 +11,7 @@ A portable internal developer platform built for Amazon EKS and Red Hat OpenShif
 - **Admission-level security** — OpenShift SCC enforced at cluster level vs. overridable `securityContext` on EKS, with automatic handling in templates
 - **GitOps discipline** — Argo CD app-of-apps pattern, drift detection, environment promotion via Git, no `kubectl apply` for steady state
 - **3 environments** — dev → stage → prod promotion through reviewed PRs with increasing replica counts and resource quotas
-- **8 CI checks** — Terraform fmt/validate/lint, Trivy scan, Helm lint, manifest rendering, kubeconform, OpenShift structural validation
+- **9 CI checks** — Terraform fmt/validate/lint, Trivy scan, Helm lint, manifest rendering, kubeconform, OPA policy validation, OpenShift structural validation
 
 ---
 
@@ -104,6 +104,7 @@ argocd/               # AppProjects, app-of-apps, ApplicationSets, config, boots
 infra/                # VPC, IAM, EKS (Terraform modules)
 platform/             # Namespaces, quotas, network policies, add-ons, env overrides
 standardized-path/    # Golden path Helm chart (the tenant contract)
+policy/               # OPA/Rego policies for EKS and OpenShift security validation
 docs/                 # Architecture, operations, tenant contract
 ```
 
