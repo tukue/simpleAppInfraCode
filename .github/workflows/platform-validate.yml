@@ -102,3 +102,33 @@ jobs:
 
       - name: Validate bootstrap manifests
         run: kubeconform -summary -ignore-missing-schemas platform/bootstrap/*.yaml
+
+  openshift-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: "v3.14.4"
+
+      - name: Render with OpenShift flags
+        run: |
+          helm template test standardized-path/app \
+            --set openshift.enabled=true \
+            --set openshift.route.enabled=true \
+            --set ingress.enabled=false \
+            > /tmp/openshift.yaml
+
+      - name: Verify Route is present
+        run: |
+          grep -q "kind: Route" /tmp/openshift.yaml && echo "PASS: Route found" || (echo "FAIL: Route missing"; exit 1)
+
+      - name: Verify Ingress is absent
+        run: |
+          grep -q "kind: Ingress" /tmp/openshift.yaml && (echo "FAIL: Ingress should be absent"; exit 1) || echo "PASS: Ingress correctly omitted"
+
+      - name: Verify securityContext is absent
+        run: |
+          grep -q "runAsNonRoot" /tmp/openshift.yaml && (echo "FAIL: securityContext should be absent on OpenShift"; exit 1) || echo "PASS: securityContext correctly omitted"

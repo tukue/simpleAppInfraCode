@@ -106,6 +106,18 @@ volumes: []
 # Additional volumeMounts on the output Deployment definition.
 volumeMounts: []
 
+# OpenShift-specific configuration
+openshift:
+  enabled: false
+  route:
+    enabled: false
+    host: ""
+    annotations: {}
+    tls:
+      termination: edge
+      insecureEdgeTerminationPolicy: Redirect
+    wildcardPolicy: None
+
 nodeSelector: {}
 
 tolerations: []
