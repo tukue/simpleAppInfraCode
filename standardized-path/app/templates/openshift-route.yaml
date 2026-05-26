@@ -25,5 +25,7 @@ spec:
     insecureEdgeTerminationPolicy: {{ .insecureEdgeTerminationPolicy }}
     {{- end }}
   {{- end }}
-  wildcardPolicy: {{ .Values.openshift.route.wildcardPolicy }}
+  {{- with .Values.openshift.route }}
+  wildcardPolicy: {{ .wildcardPolicy | default "None" }}
+  {{- end }}
 {{- end }}
