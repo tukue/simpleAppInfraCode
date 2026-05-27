@@ -67,12 +67,6 @@ spec:
             locations:
               - type: url
                 target: https://github.com/tukue/simpleAppInfraCode/blob/main/catalog-info.yaml
-              - type: url
-                target: https://github.com/tukue/simpleAppInfraCode/blob/main/standardized-path/app/catalog-info.yaml
-              - type: url
-                target: https://github.com/tukue/simpleAppInfraCode/blob/main/platform/apps/simple-app/catalog-info.yaml
-              - type: url
-                target: https://github.com/tukue/simpleAppInfraCode/blob/main/platform/apps/app-b/catalog-info.yaml
 
           scaffolder:
             locations:

@@ -43,3 +43,12 @@ spec:
   profile:
     displayName: App Developers
   children: []
+---
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: all-catalog-files
+  description: Discovers all catalog-info.yaml files across the repository
+spec:
+  targets:
+    - ./**/catalog-info.yaml
