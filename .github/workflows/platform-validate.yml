@@ -86,27 +86,33 @@ jobs:
           helm lint standardized-path/app -f platform/apps/dev/values.yaml
           helm lint standardized-path/app -f platform/apps/stage/values.yaml
           helm lint standardized-path/app -f platform/apps/prod/values.yaml
+          helm lint standardized-path/app -f platform/apps/app-b/dev/values.yaml
+          helm lint standardized-path/app -f platform/apps/app-b/stage/values.yaml
+          helm lint standardized-path/app -f platform/apps/app-b/prod/values.yaml
 
       - name: Helm unit tests
         run: helm unittest standardized-path/app
 
       - name: Render manifests
         run: |
-          helm template simple-app-dev standardized-path/app -f platform/apps/dev/values.yaml > /tmp/dev.yaml
-          helm template simple-app-stage standardized-path/app -f platform/apps/stage/values.yaml > /tmp/stage.yaml
-          helm template simple-app-prod standardized-path/app -f platform/apps/prod/values.yaml > /tmp/prod.yaml
+          helm template simple-app-dev standardized-path/app -f platform/apps/dev/values.yaml > /tmp/simple-app-dev.yaml
+          helm template simple-app-stage standardized-path/app -f platform/apps/stage/values.yaml > /tmp/simple-app-stage.yaml
+          helm template simple-app-prod standardized-path/app -f platform/apps/prod/values.yaml > /tmp/simple-app-prod.yaml
+          helm template app-b-dev standardized-path/app -f platform/apps/app-b/dev/values.yaml > /tmp/app-b-dev.yaml
+          helm template app-b-stage standardized-path/app -f platform/apps/app-b/stage/values.yaml > /tmp/app-b-stage.yaml
+          helm template app-b-prod standardized-path/app -f platform/apps/app-b/prod/values.yaml > /tmp/app-b-prod.yaml
 
       - name: Validate manifests with kubeconform
         run: |
-          kubeconform -summary -output json /tmp/dev.yaml
-          kubeconform -summary -output json /tmp/stage.yaml
-          kubeconform -summary -output json /tmp/prod.yaml
+          for f in /tmp/simple-app-*.yaml /tmp/app-b-*.yaml; do
+            kubeconform -summary -output json "$f"
+          done
 
       - name: Validate Argo CD applications
         run: |
-          kubeconform -summary -skip Application platform/apps/dev/simple-app.yaml
-          kubeconform -summary -skip Application platform/apps/stage/simple-app.yaml
-          kubeconform -summary -skip Application platform/apps/prod/simple-app.yaml
+          for f in platform/apps/dev/*.yaml platform/apps/stage/*.yaml platform/apps/prod/*.yaml; do
+            kubeconform -summary -skip Application "$f"
+          done
 
       - name: Validate bootstrap manifests
         run: kubeconform -summary -ignore-missing-schemas platform/bootstrap/*.yaml
@@ -122,6 +128,9 @@ jobs:
           helm template simple-app-dev standardized-path/app -f platform/apps/dev/values.yaml | tr -d '\r' | conftest test -p policy/eks/ --no-color -
           helm template simple-app-stage standardized-path/app -f platform/apps/stage/values.yaml | tr -d '\r' | conftest test -p policy/eks/ --no-color -
           helm template simple-app-prod standardized-path/app -f platform/apps/prod/values.yaml | tr -d '\r' | conftest test -p policy/eks/ --no-color -
+          helm template app-b-dev standardized-path/app -f platform/apps/app-b/dev/values.yaml | tr -d '\r' | conftest test -p policy/eks/ --no-color -
+          helm template app-b-stage standardized-path/app -f platform/apps/app-b/stage/values.yaml | tr -d '\r' | conftest test -p policy/eks/ --no-color -
+          helm template app-b-prod standardized-path/app -f platform/apps/app-b/prod/values.yaml | tr -d '\r' | conftest test -p policy/eks/ --no-color -
 
   openshift-validate:
     runs-on: ubuntu-latest
