@@ -11,6 +11,7 @@ A portable internal developer platform built for Amazon EKS and Red Hat OpenShif
 - **Admission-level security** — OpenShift SCC enforced at cluster level vs. overridable `securityContext` on EKS, with automatic handling in templates
 - **GitOps discipline** — Argo CD app-of-apps pattern, drift detection, environment promotion via Git, no `kubectl apply` for steady state
 - **3 environments** — dev → stage → prod promotion through reviewed PRs with increasing replica counts and resource quotas
+- **Built-in observability** — Prometheus + Grafana with pre-built dashboards, auto-discovered via ServiceMonitor
 - **9 CI checks** — Terraform fmt/validate/lint, Trivy scan, Helm lint, manifest rendering, kubeconform, OPA policy validation, OpenShift structural validation
 
 ---
@@ -107,6 +108,21 @@ The chart detects the target automatically: when `openshift.enabled=true`, pod-l
 
 ---
 
+## Observability
+
+Prometheus and Grafana are deployed as Argo CD-managed add-ons with a pre-built **Platform App Overview** dashboard covering CPU, memory, request rate, and pod status across all environments.
+
+| Component | Data source | How it's discovered |
+|---|---|---|
+| Prometheus | kube-prometheus-stack | ServiceMonitor with label `app.kubernetes.io/managed-by: platform` |
+| Grafana | Prometheus | Dashboard ConfigMap auto-loaded via provider config |
+| Metrics | kube-state-metrics + cAdvisor | Default kube-prometheus-stack scrape configs |
+| App metrics | `/metrics` endpoint | ServiceMonitor template in the Helm chart (enabled by default) |
+
+Every app deployed through the platform contract automatically gets a ServiceMonitor — teams don't need to configure scraping.
+
+---
+
 ## Key decisions
 
 | Decision | Why |
@@ -123,7 +139,6 @@ The chart detects the target automatically: when `openshift.enabled=true`, pod-l
 
 - Add OPA/Gatekeeper policies for platform-level validation beyond what SCC provides
 - Integrate external-secrets operator for cloud-provider-backed secret management
-- Add observability defaults (Prometheus + Grafana dashboards per namespace)
 - Replace `legacy/` assets with a clean `examples/` directory
 
 ---
@@ -135,7 +150,7 @@ Makefile              # One-command setup: kind cluster, Argo CD, deploy, valida
 kind-config.yaml      # Kind cluster configuration with port mappings
 argocd/               # AppProjects, app-of-apps, ApplicationSets, config, bootstrap
 infra/                # VPC, IAM, EKS (Terraform modules)
-platform/             # Namespaces, quotas, network policies, add-ons, env overrides
+platform/             # Namespaces, quotas, network policies, add-ons, Grafana dashboards, env overrides
 standardized-path/    # Golden path Helm chart (the tenant contract)
 policy/               # OPA/Rego policies for EKS and OpenShift security validation
 docs/                 # Architecture, operations, tenant contract

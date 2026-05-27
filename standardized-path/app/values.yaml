@@ -106,6 +106,12 @@ volumes: []
 # Additional volumeMounts on the output Deployment definition.
 volumeMounts: []
 
+# ServiceMonitor for Prometheus auto-discovery
+serviceMonitor:
+  enabled: true
+  interval: 30s
+  path: /metrics
+
 # OpenShift-specific configuration
 openshift:
   enabled: false

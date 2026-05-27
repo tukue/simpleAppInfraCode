@@ -49,6 +49,8 @@ deploy:
 	@echo "=== Applying platform add-ons ==="
 	kubectl apply -f platform/addons/metrics-server.yaml
 	kubectl apply -f platform/addons/nginx-ingress.yaml
+	kubectl apply -f platform/addons/kube-prometheus-stack.yaml
+	kubectl apply -f platform/addons/grafana-dashboards-platform.yaml
 
 	@echo "=== Deploying demo app (dev) ==="
 	helm template simple-app-dev standardized-path/app \
@@ -64,6 +66,10 @@ validate:
 	helm lint standardized-path/app -f platform/apps/dev/values.yaml
 	helm lint standardized-path/app -f platform/apps/stage/values.yaml
 	helm lint standardized-path/app -f platform/apps/prod/values.yaml
+
+	@echo "=== ServiceMonitor renders ==="
+	helm template simple-app-dev standardized-path/app -f platform/apps/dev/values.yaml \
+	  | grep -q "kind: ServiceMonitor" && echo "  PASS: ServiceMonitor present"
 
 	@echo "=== OpenShift path renders correctly ==="
 	helm template test standardized-path/app \
