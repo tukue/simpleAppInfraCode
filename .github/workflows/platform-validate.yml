@@ -79,7 +79,9 @@ jobs:
           sudo mv kubeconform /usr/local/bin/
 
       - name: Install helm unittest plugin
-        run: helm plugin install https://github.com/helm-unittest/helm-unittest.git
+        run: |
+          rm -rf "${HOME}/.local/share/helm/plugins/helm-unittest.git" 2>/dev/null || true
+          helm plugin install https://github.com/helm-unittest/helm-unittest.git --version 0.7.0
 
       - name: Helm lint
         run: |
