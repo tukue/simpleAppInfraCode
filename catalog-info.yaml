@@ -13,8 +13,6 @@ spec:
   system: platform
   providesApis:
     - tenant-contract
-  dependsOn:
-    - component:app-chart
 ---
 apiVersion: backstage.io/v1alpha1
 kind: System

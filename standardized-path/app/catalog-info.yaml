@@ -10,8 +10,6 @@ spec:
   lifecycle: experimental
   owner: platform-team
   system: platform
-  dependsOn:
-    - component:simple-app-infra-code
   providesApis:
     - tenant-contract
 ---

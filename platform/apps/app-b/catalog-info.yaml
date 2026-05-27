@@ -12,5 +12,3 @@ spec:
   system: platform
   dependsOn:
     - component:app-chart
-  providesApis:
-    - tenant-contract
