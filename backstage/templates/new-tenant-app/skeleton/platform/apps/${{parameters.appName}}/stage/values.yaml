@@ -1,13 +1,13 @@
 replicaCount: 2
 
 image:
-  repository: ${{ parameters.imageRepo }}${{ parameters.appName }}
+  repository: ${{ imageRepo }}/${{ appName }}
   tag: "1.0.0-rc1"
 
 ingress:
   enabled: true
   hosts:
-    - host: ${{ parameters.appName }}-stage.example.com
+    - host: ${{ appName }}-stage.example.com
       paths:
         - path: /
           pathType: Prefix
@@ -16,11 +16,11 @@ env:
   - name: ENVIRONMENT
     value: "stage"
   - name: PORT
-    value: "${{ parameters.port }}"
+    value: "${{ port }}"
 
 externalSecret:
   enabled: true
   data:
     - secretKey: db-password
       remoteRef:
-        key: stage/${{ parameters.appName }}/db-password
+        key: stage/${{ appName }}/db-password

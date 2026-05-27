@@ -1,13 +1,13 @@
 replicaCount: 1
 
 image:
-  repository: ${{ parameters.imageRepo }}${{ parameters.appName }}
+  repository: ${{ imageRepo }}/${{ appName }}
   tag: "1.0.0-dev.1"
 
 ingress:
   enabled: true
   hosts:
-    - host: ${{ parameters.appName }}-dev.example.com
+    - host: ${{ appName }}-dev.example.com
       paths:
         - path: /
           pathType: Prefix
@@ -16,11 +16,11 @@ env:
   - name: ENVIRONMENT
     value: "dev"
   - name: PORT
-    value: "${{ parameters.port }}"
+    value: "${{ port }}"
 
 externalSecret:
   enabled: true
   data:
     - secretKey: db-password
       remoteRef:
-        key: dev/${{ parameters.appName }}/db-password
+        key: dev/${{ appName }}/db-password

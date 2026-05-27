@@ -7,6 +7,9 @@ MAKEFLAGS += --no-print-directory
 CLUSTER_NAME ?= platform-demo
 NAMESPACE    ?= argocd
 KIND_IMG     ?= kindest/node:v1.30.0
+AWS_ACCOUNT_ID ?= 944684220857
+AWS_REGION     ?= eu-north-1
+IMAGE_REPO     ?= $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com/app
 
 .PHONY: help
 help:
@@ -66,11 +69,13 @@ deploy:
 	@echo "=== Deploying simple-app ==="
 	helm template simple-app-dev standardized-path/app \
 	  -f platform/apps/dev/values.yaml \
+	  --set image.repository=$(IMAGE_REPO) \
 	  | kubectl apply -f - 2>&1 | grep -v 'unchanged' || true
 
 	@echo "=== Deploying app-b ==="
 	helm template app-b-dev standardized-path/app \
 	  -f platform/apps/app-b/dev/values.yaml \
+	  --set image.repository=$(IMAGE_REPO) \
 	  | kubectl apply -f - 2>&1 | grep -v 'unchanged' || true
 
 	@echo "=== App status ==="

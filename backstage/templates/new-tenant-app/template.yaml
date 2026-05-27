@@ -40,13 +40,19 @@ spec:
 
     - title: Container Configuration
       required:
-        - imageRepo
+        - awsAccountId
+        - awsRegion
       properties:
-        imageRepo:
-          title: Container Image Repository
+        awsAccountId:
+          title: AWS Account ID
           type: string
-          description: ECR or Docker image repository URL
-          default: 944684220857.dkr.ecr.eu-north-1.amazonaws.com/
+          description: 12-digit AWS account number for ECR
+          pattern: '^\d{12}$'
+        awsRegion:
+          title: AWS Region
+          type: string
+          description: AWS region for ECR (e.g., eu-north-1, us-east-1)
+          default: eu-north-1
         port:
           title: Application Port
           type: integer
@@ -61,7 +67,9 @@ spec:
         values:
           appName: ${{ parameters.appName }}
           description: ${{ parameters.description }}
-          imageRepo: ${{ parameters.imageRepo }}
+          awsAccountId: ${{ parameters.awsAccountId }}
+          awsRegion: ${{ parameters.awsRegion }}
+          imageRepo: ${{ parameters.awsAccountId }}.dkr.ecr.${{ parameters.awsRegion }}.amazonaws.com
           port: ${{ parameters.port }}
           owner: ${{ parameters.owner }}
 
