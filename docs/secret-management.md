@@ -1,85 +1,62 @@
-# Secret Management Strategy
+# Secret Management
 
-## Overview
+External Secrets Operator manages secret synchronization from a central store into Kubernetes Secrets.
 
-This platform uses Kubernetes native secrets with the following security controls:
+## Architecture
 
-- Secrets are encrypted at rest in etcd
-- RBAC restricts secret access to authorized service accounts
-- Secrets are mounted as volumes or environment variables, never logged
-- External Secrets Operator can be added for integration with AWS Secrets Manager
-
-## Current Approach
-
-Application teams reference secrets in their Helm values:
-
-```yaml
-env:
-  - name: DATABASE_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: app-secrets
-        key: db-password
+```
+platform-secrets/namespace          dev/stage/prod namespaces
+  ┌──────────────┐                   ┌──────────────────┐
+  │ Secret       │ ← ExternalSecret →│ Secret           │
+  │ (source)     │   syncs to env    │ (consumed by pod)│
+  └──────────────┘                   └──────────────────┘
+         ↑
+  ClusterSecretStore
+  (kubernetes provider for local dev)
 ```
 
-## Creating Secrets
+## How it works
 
-For development:
-```bash
-kubectl create secret generic app-secrets \
-  --from-literal=db-password=changeme \
-  -n dev
-```
+1. **External Secrets Operator** is installed as an Argo CD add-on (`platform/addons/external-secrets.yaml`)
+2. A **ClusterSecretStore** defines the backend — `kubernetes` provider for local dev (no cloud creds needed). Swap to `aws`/`gcp`/`azure` provider in production
+3. The Helm chart includes an **ExternalSecret template** that creates a Kubernetes Secret from the store
+4. The app's Deployment references the resulting Secret via `env[].valueFrom.secretKeyRef`
 
-For production, use sealed-secrets or external-secrets-operator.
+## Per-environment setup
 
-## Future Enhancement: External Secrets Operator
+Secrets are stored in the `platform-secrets` namespace and pulled into each environment namespace by ExternalSecret:
 
-To integrate with AWS Secrets Manager:
-
-1. Install External Secrets Operator via Argo CD
-2. Configure IRSA for the operator
-3. Create SecretStore and ExternalSecret resources
-
-Example:
 ```yaml
-apiVersion: external-secrets.io/v1beta1
-kind: SecretStore
-metadata:
-  name: aws-secrets
-  namespace: prod
-spec:
-  provider:
-    aws:
-      service: SecretsManager
-      region: eu-north-1
-      auth:
-        jwt:
-          serviceAccountRef:
-            name: external-secrets
----
-apiVersion: external-secrets.io/v1beta1
-kind: ExternalSecret
-metadata:
-  name: app-secrets
-  namespace: prod
-spec:
-  refreshInterval: 1h
-  secretStoreRef:
-    name: aws-secrets
-    kind: SecretStore
-  target:
-    name: app-secrets
+# In platform/apps/dev/values.yaml
+externalSecret:
+  enabled: true
   data:
     - secretKey: db-password
       remoteRef:
-        key: prod/app/db-password
+        key: dev/simple-app/db-password
 ```
 
-## Best Practices
+## Local dev
 
-- Never commit secrets to Git
-- Use different secrets per environment
-- Rotate secrets regularly
-- Limit secret access with RBAC
-- Use workload identity (IRSA) instead of long-lived credentials
+The Makefile seeds a dev secret automatically:
+
+```bash
+kubectl create secret generic dev-simple-app-db-password \
+  --from-literal=db-password=local-dev-password \
+  -n platform-secrets
+```
+
+## Production migration
+
+| Provider | ClusterSecretStore change |
+|---|---|
+| AWS Secrets Manager | Change `provider.kubernetes` → `provider.aws` + configure IRSA |
+| GCP Secret Manager | Change `provider.kubernetes` → `provider.gcp` + configure Workload Identity |
+| HashiCorp Vault | Use `provider.vault` with Kubernetes auth |
+
+## Best practices
+
+- Never commit raw secrets to Git
+- Use different secret keys per environment
+- Set `refreshInterval` to match your rotation policy
+- Restrict store access with RBAC

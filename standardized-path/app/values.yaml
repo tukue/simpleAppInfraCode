@@ -106,6 +106,18 @@ volumes: []
 # Additional volumeMounts on the output Deployment definition.
 volumeMounts: []
 
+# ExternalSecret managed by external-secrets-operator
+externalSecret:
+  enabled: false
+  refreshInterval: 1h
+  store:
+    name: kubernetes-backend
+    kind: ClusterSecretStore
+  data: []
+  # - secretKey: db-password
+  #   remoteRef:
+  #     key: dev/app/db-password
+
 # ServiceMonitor for Prometheus auto-discovery
 serviceMonitor:
   enabled: true

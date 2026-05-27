@@ -45,10 +45,20 @@ deploy:
 	kubectl apply -f platform/bootstrap/limit-range.yaml
 	kubectl apply -f platform/bootstrap/network-policy.yaml
 	kubectl apply -f platform/bootstrap/rbac-readonly.yaml
+	kubectl apply -f platform/bootstrap/cluster-secret-store.yaml
+
+	@echo "=== Creating platform secrets namespace ==="
+	kubectl create namespace platform-secrets --dry-run=client -o yaml | kubectl apply -f -
+
+	@echo "=== Seeding dev secret for demo ==="
+	kubectl create secret generic dev-simple-app-db-password \
+	  --from-literal=db-password=local-dev-password \
+	  -n platform-secrets --dry-run=client -o yaml | kubectl apply -f -
 
 	@echo "=== Applying platform add-ons ==="
 	kubectl apply -f platform/addons/metrics-server.yaml
 	kubectl apply -f platform/addons/nginx-ingress.yaml
+	kubectl apply -f platform/addons/external-secrets.yaml
 	kubectl apply -f platform/addons/kube-prometheus-stack.yaml
 	kubectl apply -f platform/addons/grafana-dashboards-platform.yaml
 

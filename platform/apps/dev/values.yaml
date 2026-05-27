@@ -9,3 +9,15 @@ env:
     value: "dev"
   - name: MESSAGE
     value: "Hello from the dev platform"
+  - name: DB_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: simple-app-dev
+        key: db-password
+
+externalSecret:
+  enabled: true
+  data:
+    - secretKey: db-password
+      remoteRef:
+        key: dev/simple-app/db-password

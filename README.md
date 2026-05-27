@@ -12,6 +12,7 @@ A portable internal developer platform built for Amazon EKS and Red Hat OpenShif
 - **GitOps discipline** — Argo CD app-of-apps pattern, drift detection, environment promotion via Git, no `kubectl apply` for steady state
 - **3 environments** — dev → stage → prod promotion through reviewed PRs with increasing replica counts and resource quotas
 - **Built-in observability** — Prometheus + Grafana with pre-built dashboards, auto-discovered via ServiceMonitor
+- **Secret management** — External Secrets Operator with ClusterSecretStore and Helm-integrated ExternalSecret template
 - **9 CI checks** — Terraform fmt/validate/lint, Trivy scan, Helm lint, manifest rendering, kubeconform, OPA policy validation, OpenShift structural validation
 
 ---
@@ -138,7 +139,6 @@ Every app deployed through the platform contract automatically gets a ServiceMon
 ## What I'd do next
 
 - Add OPA/Gatekeeper policies for platform-level validation beyond what SCC provides
-- Integrate external-secrets operator for cloud-provider-backed secret management
 - Replace `legacy/` assets with a clean `examples/` directory
 
 ---
