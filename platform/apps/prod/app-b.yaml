@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-b-prod
+  namespace: argocd
+  labels:
+    app: app-b
+    environment: prod
+spec:
+  project: tenant-apps
+  source:
+    repoURL: https://github.com/tukue/simpleAppInfraCode.git
+    targetRevision: main
+    path: standardized-path/app
+    helm:
+      valueFiles:
+        - ../../platform/apps/app-b/prod/values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: prod
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

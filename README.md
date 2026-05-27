@@ -10,6 +10,7 @@ A portable internal developer platform built for Amazon EKS and Red Hat OpenShif
 - **Cluster-portable contract** — same Helm chart, same GitOps model, same CI pipeline works on EKS and OpenShift; toggle with one values flag
 - **Admission-level security** — OpenShift SCC enforced at cluster level vs. overridable `securityContext` on EKS, with automatic handling in templates
 - **GitOps discipline** — Argo CD app-of-apps pattern, drift detection, environment promotion via Git, no `kubectl apply` for steady state
+- **2 tenant apps** (simple-app + app-b) — same Helm contract, different values files; proves the contract scales to multiple services
 - **3 environments** — dev → stage → prod promotion through reviewed PRs with increasing replica counts and resource quotas
 - **Built-in observability** — Prometheus + Grafana with pre-built dashboards, auto-discovered via ServiceMonitor
 - **Secret management** — External Secrets Operator with ClusterSecretStore and Helm-integrated ExternalSecret template

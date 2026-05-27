@@ -8,22 +8,28 @@ spec:
     - list:
         elements:
           - env: dev
-            replicas: 1
-            imageTag: 1.0.0-dev.1
-            message: "Hello from the dev platform"
+            app: simple-app
+            valuesPath: platform/apps/dev/values.yaml
           - env: stage
-            replicas: 2
-            imageTag: 1.0.0-rc1
-            message: "Hello from the stage platform"
+            app: simple-app
+            valuesPath: platform/apps/stage/values.yaml
           - env: prod
-            replicas: 3
-            imageTag: 1.0.0
-            message: "Hello from the prod platform"
-  template:
+            app: simple-app
+            valuesPath: platform/apps/prod/values.yaml
+          - env: dev
+            app: app-b
+            valuesPath: platform/apps/app-b/dev/values.yaml
+          - env: stage
+            app: app-b
+            valuesPath: platform/apps/app-b/stage/values.yaml
+          - env: prod
+            app: app-b
+            valuesPath: platform/apps/app-b/prod/values.yaml
+   template:
     metadata:
-      name: "simple-app-{{env}}"
+      name: "{{app}}-{{env}}"
       labels:
-        app: simple-app
+        app: "{{app}}"
         environment: "{{env}}"
     spec:
       project: tenant-apps
@@ -33,7 +39,7 @@ spec:
         path: standardized-path/app
         helm:
           valueFiles:
-            - "/platform/apps/{{env}}/values.yaml"
+            - "/{{valuesPath}}"
       destination:
         server: https://kubernetes.default.svc
         namespace: "{{env}}"

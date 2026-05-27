@@ -1,0 +1,26 @@
+replicaCount: 3
+
+image:
+  repository: 944684220857.dkr.ecr.eu-north-1.amazonaws.com/app
+  tag: "2.0.0"
+
+ingress:
+  enabled: true
+  hosts:
+    - host: app-b-prod.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+env:
+  - name: ENVIRONMENT
+    value: "prod"
+  - name: MESSAGE
+    value: "Hello from app-b (prod)"
+
+externalSecret:
+  enabled: true
+  data:
+    - secretKey: db-password
+      remoteRef:
+        key: prod/app-b/db-password

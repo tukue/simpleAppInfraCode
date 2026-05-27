@@ -63,12 +63,17 @@ deploy:
 	kubectl apply -f platform/addons/kube-prometheus-stack.yaml
 	kubectl apply -f platform/addons/grafana-dashboards-platform.yaml
 
-	@echo "=== Deploying demo app (dev) ==="
+	@echo "=== Deploying simple-app ==="
 	helm template simple-app-dev standardized-path/app \
 	  -f platform/apps/dev/values.yaml \
 	  | kubectl apply -f - 2>&1 | grep -v 'unchanged' || true
 
-	@echo "=== Demo app status ==="
+	@echo "=== Deploying app-b ==="
+	helm template app-b-dev standardized-path/app \
+	  -f platform/apps/app-b/dev/values.yaml \
+	  | kubectl apply -f - 2>&1 | grep -v 'unchanged' || true
+
+	@echo "=== App status ==="
 	kubectl get pods -n dev --show-labels
 
 .PHONY: test
