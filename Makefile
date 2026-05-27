@@ -53,7 +53,7 @@ deploy:
 
 	@echo "=== Seeding dev secret for demo ==="
 	kubectl create secret generic dev-simple-app-db-password \
-	  --from-literal=db-password=local-dev-password \
+	  --from-literal=db-password=$${DEV_DB_PASSWORD:-changeme} \
 	  -n platform-secrets --dry-run=client -o yaml | kubectl apply -f -
 
 	@echo "=== Applying platform add-ons ==="

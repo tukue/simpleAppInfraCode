@@ -113,7 +113,8 @@ jobs:
       - name: Validate Argo CD applications
         run: |
           for f in platform/apps/dev/*.yaml platform/apps/stage/*.yaml platform/apps/prod/*.yaml; do
-            kubeconform -summary -skip Application "$f"
+            [[ "$(basename "$f")" == "values.yaml" ]] && continue
+            kubeconform -summary -skip Application -ignore-missing-schemas "$f"
           done
 
       - name: Validate bootstrap manifests

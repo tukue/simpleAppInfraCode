@@ -25,7 +25,7 @@ spec:
           - env: prod
             app: app-b
             valuesPath: platform/apps/app-b/prod/values.yaml
-   template:
+  template:
     metadata:
       name: "{{app}}-{{env}}"
       labels:
