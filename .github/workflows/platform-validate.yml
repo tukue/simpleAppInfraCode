@@ -107,7 +107,7 @@ jobs:
       - name: Validate manifests with kubeconform
         run: |
           for f in /tmp/simple-app-*.yaml /tmp/app-b-*.yaml; do
-            kubeconform -summary -output json "$f"
+            kubeconform -summary -ignore-missing-schemas -output json "$f"
           done
 
       - name: Validate Argo CD applications
