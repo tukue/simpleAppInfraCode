@@ -15,6 +15,37 @@ A portable internal developer platform built for Amazon EKS and Red Hat OpenShif
 
 ---
 
+## Quickstart
+
+```bash
+# Prerequisites: kind, docker, kubectl, helm, conftest (see below)
+
+# One command — creates cluster, installs Argo CD, deploys platform + demo app
+make setup
+```
+
+Or step by step:
+
+```bash
+make kind-up                    # Create local Kind cluster
+make validate                   # Run CI checks locally (no cluster needed)
+make argocd-install             # Install Argo CD + AppProjects
+make deploy                     # Bootstrap + add-ons + demo app
+make clean                      # Delete cluster
+```
+
+**Prerequisites:**
+
+| Tool | Install |
+|---|---|
+| Docker | [docs.docker.com/engine/install](https://docs.docker.com/engine/install/) |
+| kind | `go install sigs.k8s.io/kind@latest` |
+| kubectl | `curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"` |
+| Helm | `curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 \| bash` |
+| conftest | `wget "https://github.com/open-policy-agent/conftest/releases/latest/download/conftest_$(uname -s)_$(uname -m).tar.gz" && tar xzf conftest_*.tar.gz && sudo mv conftest /usr/local/bin/` |
+
+---
+
 ## Architecture
 
 ```mermaid
@@ -100,6 +131,8 @@ The chart detects the target automatically: when `openshift.enabled=true`, pod-l
 ## Repo layout
 
 ```
+Makefile              # One-command setup: kind cluster, Argo CD, deploy, validate, clean
+kind-config.yaml      # Kind cluster configuration with port mappings
 argocd/               # AppProjects, app-of-apps, ApplicationSets, config, bootstrap
 infra/                # VPC, IAM, EKS (Terraform modules)
 platform/             # Namespaces, quotas, network policies, add-ons, env overrides
@@ -112,7 +145,13 @@ docs/                 # Architecture, operations, tenant contract
 
 ## Running CI
 
-All validation runs on push/PR. Key checks:
+All validation runs on push/PR. Run locally:
+
+```bash
+make validate
+```
+
+Individual checks:
 
 ```bash
 helm lint standardized-path/app -f platform/apps/dev/values.yaml
