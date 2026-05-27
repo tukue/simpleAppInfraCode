@@ -2,22 +2,25 @@ replicaCount: 1
 
 image:
   repository: 944684220857.dkr.ecr.eu-north-1.amazonaws.com/app
-  tag: "1.0.0-dev.1"
+  tag: "2.0.0-dev.1"
+
+ingress:
+  enabled: true
+  hosts:
+    - host: app-b-dev.example.com
+      paths:
+        - path: /
+          pathType: Prefix
 
 env:
   - name: ENVIRONMENT
     value: "dev"
   - name: MESSAGE
-    value: "Hello from the dev platform"
-  - name: DB_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: simple-app-dev
-        key: db-password
+    value: "Hello from app-b (dev)"
 
 externalSecret:
   enabled: true
   data:
     - secretKey: db-password
       remoteRef:
-        key: dev/simple-app/db-password
+        key: dev/app-b/db-password

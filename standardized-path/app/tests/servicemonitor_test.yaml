@@ -1,0 +1,32 @@
+suite: ServiceMonitor
+templates:
+  - servicemonitor.yaml
+values:
+  - ../values.yaml
+tests:
+  - it: should render by default
+    asserts:
+      - isKind:
+          of: ServiceMonitor
+      - equal:
+          path: spec.endpoints[0].interval
+          value: 30s
+      - equal:
+          path: spec.endpoints[0].path
+          value: /metrics
+
+  - it: should have the platform label for discovery
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/managed-by"]
+          value: platform
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: app
+
+  - it: should not render when disabled
+    set:
+      serviceMonitor.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

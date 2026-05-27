@@ -1,0 +1,26 @@
+replicaCount: 2
+
+image:
+  repository: 944684220857.dkr.ecr.eu-north-1.amazonaws.com/app
+  tag: "2.0.0-rc1"
+
+ingress:
+  enabled: true
+  hosts:
+    - host: app-b-stage.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+env:
+  - name: ENVIRONMENT
+    value: "stage"
+  - name: MESSAGE
+    value: "Hello from app-b (stage)"
+
+externalSecret:
+  enabled: true
+  data:
+    - secretKey: db-password
+      remoteRef:
+        key: stage/app-b/db-password

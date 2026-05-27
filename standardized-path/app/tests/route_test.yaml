@@ -1,0 +1,62 @@
+suite: OpenShift Route
+templates:
+  - openshift-route.yaml
+values:
+  - ../values.yaml
+tests:
+  - it: should not render by default (openshift disabled)
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render when openshift is enabled
+    set:
+      openshift.enabled: true
+      openshift.route.enabled: true
+      ingress.enabled: false
+    asserts:
+      - isKind:
+          of: Route
+      - equal:
+          path: spec.wildcardPolicy
+          value: None
+
+  - it: should have TLS termination edge by default
+    set:
+      openshift.enabled: true
+      openshift.route.enabled: true
+      ingress.enabled: false
+    asserts:
+      - equal:
+          path: spec.tls.termination
+          value: edge
+
+  - it: should use custom TLS termination
+    set:
+      openshift.enabled: true
+      openshift.route.enabled: true
+      openshift.route.tls.termination: reencrypt
+      ingress.enabled: false
+    asserts:
+      - equal:
+          path: spec.tls.termination
+          value: reencrypt
+
+  - it: should set custom host
+    set:
+      openshift.enabled: true
+      openshift.route.enabled: true
+      openshift.route.host: myapp.apps.openshift.example.com
+      ingress.enabled: false
+    asserts:
+      - equal:
+          path: spec.host
+          value: myapp.apps.openshift.example.com
+
+  - it: should not render when route is disabled
+    set:
+      openshift.enabled: true
+      openshift.route.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

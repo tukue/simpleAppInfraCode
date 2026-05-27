@@ -10,8 +10,42 @@ A portable internal developer platform built for Amazon EKS and Red Hat OpenShif
 - **Cluster-portable contract** — same Helm chart, same GitOps model, same CI pipeline works on EKS and OpenShift; toggle with one values flag
 - **Admission-level security** — OpenShift SCC enforced at cluster level vs. overridable `securityContext` on EKS, with automatic handling in templates
 - **GitOps discipline** — Argo CD app-of-apps pattern, drift detection, environment promotion via Git, no `kubectl apply` for steady state
+- **2 tenant apps** (simple-app + app-b) — same Helm contract, different values files; proves the contract scales to multiple services
 - **3 environments** — dev → stage → prod promotion through reviewed PRs with increasing replica counts and resource quotas
-- **9 CI checks** — Terraform fmt/validate/lint, Trivy scan, Helm lint, manifest rendering, kubeconform, OPA policy validation, OpenShift structural validation
+- **Built-in observability** — Prometheus + Grafana with pre-built dashboards, auto-discovered via ServiceMonitor
+- **Secret management** — External Secrets Operator with ClusterSecretStore and Helm-integrated ExternalSecret template
+- **10 CI checks** — Terraform fmt/validate/lint, Trivy scan, Helm lint, Helm unit tests (28), manifest rendering, kubeconform, OPA policy validation, OpenShift structural validation
+
+---
+
+## Quickstart
+
+```bash
+# Prerequisites: kind, docker, kubectl, helm, conftest (see below)
+
+# One command — creates cluster, installs Argo CD, deploys platform + demo app
+make setup
+```
+
+Or step by step:
+
+```bash
+make kind-up                    # Create local Kind cluster
+make validate                   # Run CI checks locally (no cluster needed)
+make argocd-install             # Install Argo CD + AppProjects
+make deploy                     # Bootstrap + add-ons + demo app
+make clean                      # Delete cluster
+```
+
+**Prerequisites:**
+
+| Tool | Install |
+|---|---|
+| Docker | [docs.docker.com/engine/install](https://docs.docker.com/engine/install/) |
+| kind | `go install sigs.k8s.io/kind@latest` |
+| kubectl | `curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"` |
+| Helm | `curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 \| bash` |
+| conftest | `wget "https://github.com/open-policy-agent/conftest/releases/latest/download/conftest_$(uname -s)_$(uname -m).tar.gz" && tar xzf conftest_*.tar.gz && sudo mv conftest /usr/local/bin/` |
 
 ---
 
@@ -76,6 +110,21 @@ The chart detects the target automatically: when `openshift.enabled=true`, pod-l
 
 ---
 
+## Observability
+
+Prometheus and Grafana are deployed as Argo CD-managed add-ons with a pre-built **Platform App Overview** dashboard covering CPU, memory, request rate, and pod status across all environments.
+
+| Component | Data source | How it's discovered |
+|---|---|---|
+| Prometheus | kube-prometheus-stack | ServiceMonitor with label `app.kubernetes.io/managed-by: platform` |
+| Grafana | Prometheus | Dashboard ConfigMap auto-loaded via provider config |
+| Metrics | kube-state-metrics + cAdvisor | Default kube-prometheus-stack scrape configs |
+| App metrics | `/metrics` endpoint | ServiceMonitor template in the Helm chart (enabled by default) |
+
+Every app deployed through the platform contract automatically gets a ServiceMonitor — teams don't need to configure scraping.
+
+---
+
 ## Key decisions
 
 | Decision | Why |
@@ -91,8 +140,6 @@ The chart detects the target automatically: when `openshift.enabled=true`, pod-l
 ## What I'd do next
 
 - Add OPA/Gatekeeper policies for platform-level validation beyond what SCC provides
-- Integrate external-secrets operator for cloud-provider-backed secret management
-- Add observability defaults (Prometheus + Grafana dashboards per namespace)
 - Replace `legacy/` assets with a clean `examples/` directory
 
 ---
@@ -100,9 +147,11 @@ The chart detects the target automatically: when `openshift.enabled=true`, pod-l
 ## Repo layout
 
 ```
+Makefile              # One-command setup: kind cluster, Argo CD, deploy, validate, clean
+kind-config.yaml      # Kind cluster configuration with port mappings
 argocd/               # AppProjects, app-of-apps, ApplicationSets, config, bootstrap
 infra/                # VPC, IAM, EKS (Terraform modules)
-platform/             # Namespaces, quotas, network policies, add-ons, env overrides
+platform/             # Namespaces, quotas, network policies, add-ons, Grafana dashboards, env overrides
 standardized-path/    # Golden path Helm chart (the tenant contract)
 policy/               # OPA/Rego policies for EKS and OpenShift security validation
 docs/                 # Architecture, operations, tenant contract
@@ -112,9 +161,16 @@ docs/                 # Architecture, operations, tenant contract
 
 ## Running CI
 
-All validation runs on push/PR. Key checks:
+All validation runs on push/PR. Run locally:
 
 ```bash
+make validate
+```
+
+Individual checks:
+
+```bash
+make test  # 28 unit tests across 7 suites
 helm lint standardized-path/app -f platform/apps/dev/values.yaml
 helm template test standardized-path/app | kubeconform -summary
 helm template test standardized-path/app \
