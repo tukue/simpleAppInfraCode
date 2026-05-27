@@ -78,6 +78,9 @@ jobs:
           tar xf kubeconform-linux-amd64.tar.gz
           sudo mv kubeconform /usr/local/bin/
 
+      - name: Install helm unittest plugin
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest.git
+
       - name: Helm lint
         run: |
           helm lint standardized-path/app -f platform/apps/dev/values.yaml
