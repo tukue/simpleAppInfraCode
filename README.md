@@ -13,7 +13,7 @@ A portable internal developer platform built for Amazon EKS and Red Hat OpenShif
 - **3 environments** — dev → stage → prod promotion through reviewed PRs with increasing replica counts and resource quotas
 - **Built-in observability** — Prometheus + Grafana with pre-built dashboards, auto-discovered via ServiceMonitor
 - **Secret management** — External Secrets Operator with ClusterSecretStore and Helm-integrated ExternalSecret template
-- **9 CI checks** — Terraform fmt/validate/lint, Trivy scan, Helm lint, manifest rendering, kubeconform, OPA policy validation, OpenShift structural validation
+- **10 CI checks** — Terraform fmt/validate/lint, Trivy scan, Helm lint, Helm unit tests (28), manifest rendering, kubeconform, OPA policy validation, OpenShift structural validation
 
 ---
 
@@ -169,6 +169,7 @@ make validate
 Individual checks:
 
 ```bash
+make test  # 28 unit tests across 7 suites
 helm lint standardized-path/app -f platform/apps/dev/values.yaml
 helm template test standardized-path/app | kubeconform -summary
 helm template test standardized-path/app \

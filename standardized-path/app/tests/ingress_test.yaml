@@ -1,0 +1,25 @@
+suite: Ingress
+templates:
+  - ingress.yaml
+values:
+  - ../values.yaml
+tests:
+  - it: should not render when disabled (default)
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render when enabled
+    set:
+      ingress.enabled: true
+      ingress.hosts[0].host: app.example.com
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: spec.rules[0].host
+          value: app.example.com
+      - equal:
+          path: spec.ingressClassName
+          value: nginx
+

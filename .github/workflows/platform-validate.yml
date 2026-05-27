@@ -84,6 +84,9 @@ jobs:
           helm lint standardized-path/app -f platform/apps/stage/values.yaml
           helm lint standardized-path/app -f platform/apps/prod/values.yaml
 
+      - name: Helm unit tests
+        run: helm unittest standardized-path/app
+
       - name: Render manifests
         run: |
           helm template simple-app-dev standardized-path/app -f platform/apps/dev/values.yaml > /tmp/dev.yaml

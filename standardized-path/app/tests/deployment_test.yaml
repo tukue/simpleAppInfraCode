@@ -1,0 +1,91 @@
+suite: Deployment
+templates:
+  - deployment.yaml
+values:
+  - ../values.yaml
+tests:
+  - it: should be a Deployment
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: apiVersion
+          value: apps/v1
+
+  - it: should have default replica count
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 2
+
+  - it: should use the correct image
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: 944684220857\.dkr\.ecr\.eu-north-1\.amazonaws\.com/app:1\.0\.0
+
+  - it: should set securityContext on EKS (default)
+    asserts:
+      - exists:
+          path: spec.template.spec.securityContext.fsGroup
+      - exists:
+          path: spec.template.spec.containers[0].securityContext.runAsNonRoot
+      - exists:
+          path: spec.template.spec.containers[0].securityContext.runAsUser
+      - exists:
+          path: spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.capabilities.drop[0]
+          value: ALL
+
+  - it: should omit securityContext on OpenShift
+    set:
+      openshift.enabled: true
+    asserts:
+      - isNull:
+          path: spec.template.spec.securityContext
+      - isNull:
+          path: spec.template.spec.containers[0].securityContext
+
+  - it: should match custom replica count
+    set:
+      replicaCount: 5
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 5
+
+  - it: should use custom service account name
+    set:
+      serviceAccount.name: custom-sa
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: custom-sa
+
+  - it: should set resource limits
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: 200m
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 256Mi
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: 100m
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.memory
+          value: 128Mi
+
+  - it: should include environment variables
+    set:
+      env:
+        - name: DB_HOST
+          value: mydb.example.com
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: DB_HOST
+            value: mydb.example.com

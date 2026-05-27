@@ -17,7 +17,8 @@ help:
 	@echo '  kind-down      Delete Kind cluster'
 	@echo '  argocd-install Install Argo CD and apply AppProjects'
 	@echo '  deploy         Apply platform bootstrap + add-ons + demo app'
-	@echo '  validate       Run CI checks locally (Helm lint + conftest)'
+	@echo '  test           Run Helm unit tests'
+	@echo '  validate       Run CI checks locally (Helm lint + test + conftest)'
 	@echo '  clean          kind-down + remove tmp files'
 	@echo ''
 
@@ -70,8 +71,13 @@ deploy:
 	@echo "=== Demo app status ==="
 	kubectl get pods -n dev --show-labels
 
+.PHONY: test
+test:
+	@echo "=== Helm unit tests ==="
+	helm unittest standardized-path/app --color
+
 .PHONY: validate
-validate:
+validate: test
 	@echo "=== Helm lint ==="
 	helm lint standardized-path/app -f platform/apps/dev/values.yaml
 	helm lint standardized-path/app -f platform/apps/stage/values.yaml

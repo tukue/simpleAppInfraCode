@@ -4,7 +4,8 @@ kind: ServiceMonitor
 metadata:
   name: {{ include "my-app.fullname" . }}
   labels:
-    {{- include "my-app.labels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ include "my-app.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: platform
 spec:
   selector:
