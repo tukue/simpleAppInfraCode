@@ -1,0 +1,14 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: app-b
+  description: Second tenant application proving contract reusability across dev/stage/prod
+  annotations:
+    github.com/project-slug: tukue/simpleAppInfraCode
+spec:
+  type: service
+  lifecycle: experimental
+  owner: app-developers
+  system: platform
+  dependsOn:
+    - component:app-chart

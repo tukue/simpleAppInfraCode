@@ -1,0 +1,14 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: simple-app
+  description: Demo tenant application deployed via the platform golden path
+  annotations:
+    github.com/project-slug: tukue/simpleAppInfraCode
+spec:
+  type: service
+  lifecycle: experimental
+  owner: app-developers
+  system: platform
+  dependsOn:
+    - component:app-chart

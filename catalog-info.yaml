@@ -1,0 +1,54 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: simple-app-infra-code
+  description: Internal Developer Platform for EKS and OpenShift
+  annotations:
+    github.com/project-slug: tukue/simpleAppInfraCode
+    backstage.io/techdocs-ref: dir:.
+spec:
+  type: repository
+  lifecycle: experimental
+  owner: platform-team
+  system: platform
+  providesApis:
+    - tenant-contract
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: platform
+  description: Internal Developer Platform providing golden path, GitOps, and observability
+spec:
+  owner: platform-team
+---
+apiVersion: backstage.io/v1alpha1
+kind: Group
+metadata:
+  name: platform-team
+  description: Platform engineering team
+spec:
+  type: team
+  profile:
+    displayName: Platform Team
+  children: []
+---
+apiVersion: backstage.io/v1alpha1
+kind: Group
+metadata:
+  name: app-developers
+  description: Application development teams
+spec:
+  type: team
+  profile:
+    displayName: App Developers
+  children: []
+---
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: all-catalog-files
+  description: Discovers all catalog-info.yaml files across the repository
+spec:
+  targets:
+    - ./**/catalog-info.yaml

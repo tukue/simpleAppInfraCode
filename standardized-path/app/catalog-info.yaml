@@ -1,0 +1,29 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: app-chart
+  description: Golden path Helm chart — the tenant contract for deploying services on the platform
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+spec:
+  type: library
+  lifecycle: experimental
+  owner: platform-team
+  system: platform
+  providesApis:
+    - tenant-contract
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: tenant-contract
+  description: Contract defining what app teams provide and what the platform guarantees
+spec:
+  type: helm-values
+  lifecycle: experimental
+  owner: platform-team
+  system: platform
+  definition: |
+    App Team provides: image, port, replicas, env vars, secret refs
+    Platform guarantees: non-root, dropped capabilities, resource boundaries,
+    network isolation, drift detection, immutable tags, cluster portability

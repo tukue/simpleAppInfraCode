@@ -1,0 +1,132 @@
+apiVersion: backstage.io/v1beta2
+kind: Template
+metadata:
+  name: new-tenant-app
+  title: New Tenant Application
+  description: Scaffold a new application using the platform's golden path Helm chart
+  tags:
+    - platform
+    - helm
+    - golden-path
+spec:
+  owner: platform-team
+  type: service
+
+  parameters:
+    - title: Application Details
+      required:
+        - appName
+        - description
+        - owner
+      properties:
+        appName:
+          title: Application Name
+          type: string
+          description: Unique name for the application (e.g., app-c)
+          pattern: '^[a-z][a-z0-9-]*$'
+        description:
+          title: Description
+          type: string
+          description: Purpose of the application
+        owner:
+          title: Owner
+          type: string
+          description: Backstage Group or User that owns this app
+          default: app-developers
+          ui:field: OwnerPicker
+          ui:options:
+            allowedKinds:
+              - Group
+
+    - title: Container Configuration
+      required:
+        - awsAccountId
+        - awsRegion
+      properties:
+        awsAccountId:
+          title: AWS Account ID
+          type: string
+          description: 12-digit AWS account number for ECR
+          pattern: '^\d{12}$'
+        awsRegion:
+          title: AWS Region
+          type: string
+          description: AWS region for ECR (e.g., eu-north-1, us-east-1)
+          default: eu-north-1
+        port:
+          title: Application Port
+          type: integer
+          default: 8080
+
+  steps:
+    - id: fetch-skeleton
+      name: Fetch Skeleton
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          appName: ${{ parameters.appName }}
+          description: ${{ parameters.description }}
+          awsAccountId: ${{ parameters.awsAccountId }}
+          awsRegion: ${{ parameters.awsRegion }}
+          imageRepo: ${{ parameters.awsAccountId }}.dkr.ecr.${{ parameters.awsRegion }}.amazonaws.com
+          port: ${{ parameters.port }}
+          owner: ${{ parameters.owner }}
+
+    - id: publish
+      name: Publish to GitHub
+      action: publish:github
+      input:
+        repoUrl: github.com?owner=tukue&repo=simpleAppInfraCode
+        branch: feature/${{ parameters.appName }}
+        defaultBranch: main
+        repoVisibility: public
+
+    - id: register
+      name: Register in Backstage
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
+        catalogInfoPath: /catalog-info.yaml
+
+  output:
+    links:
+      - title: Open in GitHub
+        url: ${{ steps.publish.output.remoteUrl }}
+      - title: Open Pull Request
+        url: ${{ steps.publish.output.pullRequestUrl }}
+    text:
+      - title: Next Steps
+        content: |
+          ### After Scaffolding
+
+          1. Add the app entries to `argocd/appsets/environments.yaml`:
+             ```yaml
+             - env: dev
+               app: ${{ parameters.appName }}
+               valuesPath: platform/apps/${{ parameters.appName }}/dev/values.yaml
+             - env: stage
+               app: ${{ parameters.appName }}
+               valuesPath: platform/apps/${{ parameters.appName }}/stage/values.yaml
+             - env: prod
+               app: ${{ parameters.appName }}
+               valuesPath: platform/apps/${{ parameters.appName }}/prod/values.yaml
+             ```
+
+          2. Add a `catalog-info.yaml` at `platform/apps/${{ parameters.appName }}/catalog-info.yaml`:
+             ```yaml
+             apiVersion: backstage.io/v1alpha1
+             kind: Component
+             metadata:
+               name: ${{ parameters.appName }}
+               description: ${{ parameters.description }}
+             spec:
+               type: service
+               owner: ${{ parameters.owner }}
+               system: platform
+               dependsOn:
+                 - component:app-chart
+             ```
+
+          3. Open a PR to merge the new app into main.
+          4. Argo CD will automatically pick up the new ApplicationSet entries.

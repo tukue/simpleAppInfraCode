@@ -1,0 +1,96 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: backstage
+  namespace: argocd
+spec:
+  project: platform
+  source:
+    repoURL: https://backstage.github.io/charts
+    chart: backstage
+    targetRevision: 2.x
+    helm:
+      values: |
+        backend:
+          image:
+            repository: backstage/backstage
+            tag: latest
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 250m
+              memory: 512Mi
+
+        service:
+          type: ClusterIP
+          port: 80
+
+        ingress:
+          enabled: true
+          className: nginx
+          annotations:
+            nginx.ingress.kubernetes.io/ssl-redirect: "false"
+          hosts:
+            - host: backstage.platform.example.com
+              paths:
+                - path: /
+                  pathType: Prefix
+
+        appConfig:
+          app:
+            title: Internal Developer Platform
+            baseUrl: http://backstage.platform.example.com
+          backend:
+            baseUrl: http://backstage.platform.example.com
+            listen:
+              port: 7007
+            cors:
+              origin: http://backstage.platform.example.com
+          organization:
+            name: Platform Engineering
+
+          auth:
+            environment: development
+            providers:
+              guest: {}
+
+          integrations:
+            github:
+              - host: github.com
+                apps: []
+
+          catalog:
+            import:
+              entityFilename: catalog-info.yaml
+            locations:
+              - type: url
+                target: https://github.com/tukue/simpleAppInfraCode/blob/main/catalog-info.yaml
+
+          scaffolder:
+            locations:
+              - type: url
+                target: https://github.com/tukue/simpleAppInfraCode/blob/main/backstage/templates/new-tenant-app/template.yaml
+
+          kubernetes:
+            serviceLocatorMethod:
+              type: multiTenant
+            clusterLocatorMethods:
+              - type: config
+                clusters:
+                  - name: in-cluster
+                    url: https://kubernetes.default.svc
+                    authProvider: serviceAccount
+                    skipTLSVerify: true
+                    skipMetricsLookup: true
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: backstage
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
