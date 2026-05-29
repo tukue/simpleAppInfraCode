@@ -92,6 +92,32 @@ jobs:
           helm lint standardized-path/app -f platform/apps/app-b/stage/values.yaml
           helm lint standardized-path/app -f platform/apps/app-b/prod/values.yaml
 
+      - name: Enforce immutable tags and revisions
+        run: |
+          set +e
+          has_error=0
+          for f in platform/apps/**/values.yaml argocd/**/*.yaml; do
+            [ -f "$f" ] || continue
+            if grep -qE 'tag:\s*"?latest"?' "$f" 2>/dev/null; then
+              echo "::error file=$f::Found 'latest' image tag — use an immutable version tag instead"
+              has_error=1
+            fi
+            if grep -qE 'targetRevision:\s*"?HEAD"?' "$f" 2>/dev/null; then
+              echo "::error file=$f::Found 'HEAD' revision — pin to an explicit branch or tag"
+              has_error=1
+            fi
+          done
+          # Also check per-environment values files explicitly
+          for f in platform/apps/dev/values.yaml platform/apps/stage/values.yaml platform/apps/prod/values.yaml platform/apps/app-b/dev/values.yaml platform/apps/app-b/stage/values.yaml platform/apps/app-b/prod/values.yaml; do
+            [ -f "$f" ] || continue
+            tag_val=$(grep -E '^\s+tag:' "$f" | sed 's/.*tag:\s*"\{0,1\}\([^"]*\)"\{0,1\}/\1/' | xargs)
+            if [ "$tag_val" = "latest" ]; then
+              echo "::error file=$f::Found 'latest' image tag — use an immutable version tag instead"
+              has_error=1
+            fi
+          done
+          exit $has_error
+
       - name: Helm unit tests
         run: helm unittest standardized-path/app
 

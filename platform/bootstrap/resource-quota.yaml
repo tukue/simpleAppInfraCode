@@ -11,3 +11,31 @@ spec:
     limits.memory: 40Gi
     pods: "50"
     services: "20"
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: stage-quota
+  namespace: stage
+spec:
+  hard:
+    requests.cpu: "15"
+    requests.memory: 30Gi
+    limits.cpu: "30"
+    limits.memory: 60Gi
+    pods: "30"
+    services: "15"
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: prod-quota
+  namespace: prod
+spec:
+  hard:
+    requests.cpu: "20"
+    requests.memory: 40Gi
+    limits.cpu: "40"
+    limits.memory: 80Gi
+    pods: "20"
+    services: "10"
