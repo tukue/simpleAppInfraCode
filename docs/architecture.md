@@ -7,7 +7,7 @@ This repository models a small internal developer platform on Amazon EKS.
 - `infra/` provisions AWS resources such as VPC networking, IAM, and EKS.
 - `platform/` represents the declarative cluster state reconciled by Argo CD.
 - `standardized-path/app/` is the single supported application contract for tenant workloads.
-- `legacy/` contains historical assets that are intentionally outside the supported path.
+- `archive/` contains historical assets that are intentionally outside the supported path.
 
 ## Ownership Boundaries
 

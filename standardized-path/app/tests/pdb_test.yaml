@@ -1,0 +1,36 @@
+suite: PodDisruptionBudget
+templates:
+  - pdb.yaml
+values:
+  - ../values.yaml
+tests:
+  - it: should not render when PDB is disabled (default)
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render with minAvailable when enabled
+    set:
+      podDisruptionBudget.enabled: true
+      podDisruptionBudget.minAvailable: 1
+    asserts:
+      - isKind:
+          of: PodDisruptionBudget
+      - equal:
+          path: spec.minAvailable
+          value: 1
+      - notExists:
+          path: spec.maxUnavailable
+
+  - it: should render with maxUnavailable when enabled
+    set:
+      podDisruptionBudget.enabled: true
+      podDisruptionBudget.maxUnavailable: 1
+    asserts:
+      - isKind:
+          of: PodDisruptionBudget
+      - equal:
+          path: spec.maxUnavailable
+          value: 1
+      - notExists:
+          path: spec.minAvailable

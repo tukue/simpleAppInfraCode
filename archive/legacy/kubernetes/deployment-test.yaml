@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-app-test
+  template:
+    metadata:
+      labels:
+        app: my-app-test
+    spec:
+      containers:
+      - name: my-app-test
+        image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/mynoderepo:test
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080

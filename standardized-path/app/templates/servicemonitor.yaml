@@ -2,15 +2,15 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ include "my-app.fullname" . }}
+  name: {{ include "app.fullname" . }}
   labels:
-    app.kubernetes.io/name: {{ include "my-app.name" . }}
+    app.kubernetes.io/name: {{ include "app.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: platform
 spec:
   selector:
     matchLabels:
-      {{- include "my-app.selectorLabels" . | nindent 6 }}
+      {{- include "app.selectorLabels" . | nindent 6 }}
   endpoints:
     - port: http
       interval: {{ .Values.serviceMonitor.interval }}

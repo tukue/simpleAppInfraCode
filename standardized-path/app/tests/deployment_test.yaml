@@ -18,11 +18,13 @@ tests:
           path: spec.replicas
           value: 2
 
-  - it: should use the correct image
+  - it: should use the provided image repository and tag
+    set:
+      image.repository: my-registry.example.com/my-app
     asserts:
       - matchRegex:
           path: spec.template.spec.containers[0].image
-          pattern: 944684220857\.dkr\.ecr\.eu-north-1\.amazonaws\.com/app:1\.0\.0
+          pattern: my-registry\.example\.com/my-app:1\.0\.0
 
   - it: should set securityContext on EKS (default)
     asserts:

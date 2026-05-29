@@ -140,7 +140,7 @@ Every app deployed through the platform contract automatically gets a ServiceMon
 ## What I'd do next
 
 - Add OPA/Gatekeeper policies for platform-level validation beyond what SCC provides
-- Replace `legacy/` assets with a clean `examples/` directory
+- Replaced `legacy/` assets with a clean `archive/` directory
 
 ---
 
