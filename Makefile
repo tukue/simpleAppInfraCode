@@ -104,10 +104,12 @@ validate: test
 
 	@echo "=== ServiceMonitor renders ==="
 	helm template simple-app-dev standardized-path/app -f platform/apps/dev/values.yaml \
+	  --set image.repository=$(IMAGE_REPO) \
 	  | grep -q "kind: ServiceMonitor" && echo "  PASS: ServiceMonitor present"
 
 	@echo "=== OpenShift path renders correctly ==="
 	helm template test standardized-path/app \
+	  --set image.repository=$(IMAGE_REPO) \
 	  --set openshift.enabled=true \
 	  --set openshift.route.enabled=true \
 	  --set ingress.enabled=false \
@@ -115,10 +117,12 @@ validate: test
 
 	@echo "=== OPA policy: EKS manifests ==="
 	helm template simple-app-dev standardized-path/app -f platform/apps/dev/values.yaml \
+	  --set image.repository=$(IMAGE_REPO) \
 	  | tr -d '\r' | conftest test -p policy/eks/ --no-color -
 
 	@echo "=== OPA policy: OpenShift manifests ==="
 	helm template test standardized-path/app \
+	  --set image.repository=$(IMAGE_REPO) \
 	  --set openshift.enabled=true \
 	  --set openshift.route.enabled=true \
 	  --set ingress.enabled=false \
